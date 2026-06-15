@@ -1,52 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Privacy Policy — PKLMediaLab Apps</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D1525; color: #e0e8f0; line-height: 1.6; }
-    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 24px 64px; }
-    h1 { font-size: 28px; color: #11998E; margin-bottom: 4px; }
-    .subtitle { font-size: 15px; color: #a0b4c8; margin-bottom: 8px; }
-    .meta { font-size: 13px; color: #88aacc; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #2a3a50; }
-    .meta strong { color: #c0d0e0; }
-    h2 { font-size: 19px; color: #f0c040; margin-top: 28px; margin-bottom: 10px; font-weight: 600; }
-    p { margin-bottom: 12px; color: #c0d0e0; font-size: 15px; }
-    ul { margin: 8px 0 14px 22px; }
-    li { margin-bottom: 8px; color: #c0d0e0; font-size: 15px; }
-    a { color: #11998E; }
-    a:hover { color: #1fc4b3; }
-    .intro { background: #162030; border: 1px solid #2a3a50; border-radius: 8px; padding: 16px 18px; margin-bottom: 24px; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #2a3a50; font-size: 13px; color: #88aacc; }
-    code { font-family: ui-monospace, monospace; background: #1a2a40; padding: 1px 6px; border-radius: 4px; color: #88bbff; font-size: 14px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — PKL Media Lab</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue:      #1B5E8A;
+    --blue-mid:  #2E75B6;
+    --blue-light:#EAF2FA;
+    --gray-bg:   #F5F7FA;
+    --gray-bdr:  #DDE3EA;
+    --text:      #1A1A1A;
+    --muted:     #555;
+    --radius:    8px;
+  }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--gray-bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+
+  /* Header */
+  .site-header { background: var(--blue); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .site-header .logo { color: white; font-weight: 700; font-size: 18px; text-decoration: none; }
+  .site-header .logo span { color: #93BFDE; font-weight: 400; font-size: 13px; margin-left: 6px; }
+  .site-header nav a { color: #C5DDEF; font-size: 13px; text-decoration: none; margin-left: 20px; }
+  .site-header nav a:hover { color: white; }
+
+  /* Layout */
+  .container { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* Page title */
+  .page-title { font-size: 28px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+  .page-meta { font-size: 13px; color: var(--muted); margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid var(--blue-light); }
+
+  /* Apps badge row */
+  .apps-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .app-badge { background: var(--blue-light); color: var(--blue); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+
+  /* Sections */
+  .section { margin-bottom: 32px; }
+  h2 { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gray-bdr); }
+  p { color: var(--muted); margin-bottom: 10px; }
+  p:last-child { margin-bottom: 0; }
+  p strong { color: var(--text); }
+
+  /* Lists */
+  ul { margin: 8px 0 12px 0; list-style: none; }
+  ul li { color: var(--muted); padding: 6px 0 6px 16px; position: relative; border-bottom: 1px solid var(--gray-bdr); }
+  ul li:last-child { border-bottom: none; }
+  ul li::before { content: '–'; position: absolute; left: 0; color: var(--blue-mid); }
+  ul li strong { color: var(--text); }
+  ul li a { color: var(--blue-mid); text-decoration: none; }
+  ul li a:hover { text-decoration: underline; }
+
+  /* Rights grid */
+  .rights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 12px 0; }
+  .right-card { background: white; border: 1px solid var(--gray-bdr); border-radius: var(--radius); padding: 12px 14px; }
+  .right-card strong { display: block; color: var(--blue); font-size: 13px; margin-bottom: 4px; }
+  .right-card span { font-size: 12px; color: var(--muted); }
+
+  /* Contact box */
+  .contact-box { background: var(--blue-light); border: 1px solid #B8D4EC; border-radius: var(--radius); padding: 16px 20px; margin-top: 12px; }
+  .contact-box p { color: #2a4a6a; margin: 0; }
+  .contact-box a { color: var(--blue); text-decoration: none; font-weight: 600; }
+
+  /* Footer */
+  .site-footer { background: var(--blue); color: #93BFDE; text-align: center; padding: 20px; font-size: 12px; margin-top: 40px; }
+  .site-footer a { color: #C5DDEF; text-decoration: none; }
+
+  /* Advisory note */
+  .advisory { background: #FFF3CC; border: 1px solid #E8A020; border-radius: var(--radius); padding: 12px 16px; margin-top: 32px; font-size: 13px; color: #7A5500; line-height: 1.6; }
+
+  @media (max-width: 600px) {
+    .site-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .rights-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Privacy Policy</h1>
-    <div class="subtitle">PKLMediaLab Apps — News-Distiller and TruthPrism</div>
-    <div class="meta">
-      <strong>Effective Date:</strong> May 6, 2026 &nbsp;·&nbsp;
-      <strong>Operated by:</strong> Paul Laikind, PhD &nbsp;·&nbsp;
-      <strong>Contact:</strong> <a href="mailto:support@pklmedialab.com">support@pklmedialab.com</a>
-    </div>
 
-    <div class="intro">
-      <p style="margin:0;">News-Distiller and TruthPrism are AI-powered tools for summarizing and fact-checking news articles. This Privacy Policy explains what information we collect, how we use it, and your rights regarding that information. We are committed to handling your data responsibly and transparently. The same policy applies to both apps and their browser extensions and iOS apps.</p>
-    </div>
+<header class="site-header">
+  <a class="logo" href="/">PKL Media Lab <span>by Paul Laikind, PhD</span></a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="mailto:paul@pklmedialab.com">Contact</a>
+  </nav>
+</header>
 
+<div class="container">
+
+  <h1 class="page-title">Privacy Policy</h1>
+  <div class="page-meta">
+    Effective Date: June 2026 &nbsp;·&nbsp; Operated by: Paul Laikind, PhD &nbsp;·&nbsp; Contact: <a href="mailto:support@pklmedialab.com" style="color:var(--blue-mid);">support@pklmedialab.com</a>
+  </div>
+
+  <div class="apps-row">
+    <span class="app-badge">MedPrism</span>
+    <span class="app-badge">TruthPrism</span>
+    <span class="app-badge">News-Distiller</span>
+    <span class="app-badge">ScamPrism</span>
+  </div>
+
+  <p>PKL Media Lab develops AI-powered tools for analyzing news articles, fact-checking claims, detecting scams, and assessing the integrity of medical research papers. This Privacy Policy explains what information we collect, how we use it, and your rights regarding that information. We are committed to handling your data responsibly and transparently.</p>
+
+  <div class="section">
     <h2>1. Information We Collect</h2>
     <p>We collect only the minimum information necessary to provide the service:</p>
     <ul>
-      <li><strong>Email address</strong> — collected only if you contact us for support, request an access code, or are issued a friends-and-family code by us. Used solely to communicate with you about the apps.</li>
+      <li><strong>Email address</strong> — collected only if you contact us for support, request an access code, or are issued an access code by us. Used solely to communicate with you about the apps.</li>
       <li><strong>Access code usage data</strong> — we track how many times each access code has been used to enforce usage limits and prevent abuse. No personally identifiable information is attached to usage counts.</li>
-      <li><strong>Article content you submit</strong> — URLs and text you submit for analysis are sent to Anthropic's Claude API for processing. We do not store article content after analysis is complete.</li>
-      <li><strong>Browser cookies and local storage</strong> — we use functional storage (such as <code>nd_code</code> and <code>tl_access_code</code>) to remember your access code between sessions. This data contains no personal information beyond your access code and is not used for tracking or advertising.</li>
+      <li><strong>Article and document content you submit</strong> — URLs, text, and PDF documents you submit for analysis are sent to our server and to third-party AI services for processing. We do not store submitted content after analysis is complete. MedPrism analysis results are retained temporarily (up to 48 hours) to enable full report retrieval, then automatically purged.</li>
+      <li><strong>Feedback comments</strong> — if you choose to submit feedback through any app, your comment is stored for product improvement purposes. No personal information is required to submit feedback.</li>
+      <li><strong>Browser cookies and local storage</strong> — we use functional storage to remember your access code between sessions. This data contains no personal information beyond your access code and is not used for tracking or advertising.</li>
       <li><strong>IP-based usage counters</strong> — for users without an access code, we maintain a hashed counter to enforce free-use limits. The IP address itself is not retained; only a one-way hash and a count.</li>
     </ul>
+  </div>
 
+  <div class="section">
     <h2>2. How We Use Your Information</h2>
     <ul>
       <li>To deliver requested communications (such as access codes or support replies)</li>
@@ -55,52 +124,84 @@
       <li>To improve the quality and accuracy of the service</li>
     </ul>
     <p>We do not sell, rent, or share your personal information with third parties for marketing purposes.</p>
+  </div>
 
+  <div class="section">
     <h2>3. Third-Party Services</h2>
     <p>Our apps use the following third-party services to operate:</p>
     <ul>
-      <li><strong>Anthropic Claude API</strong> — article content you submit is processed by Anthropic's Claude AI. Anthropic's privacy policy governs their handling of this data. See <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a>.</li>
-      <li><strong>Brave Search API</strong> (TruthPrism only) — used to verify factual claims against external sources. See <a href="https://brave.com/privacy/" target="_blank">brave.com/privacy</a>.</li>
-      <li><strong>Railway</strong> — our hosting provider. Your data is stored on Railway's servers. See <a href="https://railway.app/legal/privacy" target="_blank">railway.app/legal/privacy</a>.</li>
-      <li><strong>SendGrid</strong> — used to deliver communications by email when applicable. See <a href="https://www.twilio.com/legal/privacy" target="_blank">twilio.com/legal/privacy</a>.</li>
+      <li><strong>Anthropic Claude API</strong> — content you submit is processed by Anthropic's Claude AI. Anthropic's privacy policy governs their handling of this data. See <a href="https://anthropic.com/privacy" target="_blank" rel="noopener">anthropic.com/privacy</a>.</li>
+      <li><strong>Brave Search API</strong> (TruthPrism, MedPrism, ScamPrism) — used to verify factual claims and cross-reference external databases. See <a href="https://brave.com/privacy/search" target="_blank" rel="noopener">brave.com/privacy/search</a>.</li>
+      <li><strong>NCBI E-utilities / PubMed Central</strong> (MedPrism) — used to retrieve full-text research articles from the National Library of Medicine's public database. See <a href="https://www.nlm.nih.gov/privacy.html" target="_blank" rel="noopener">nlm.nih.gov/privacy</a>.</li>
+      <li><strong>Unpaywall</strong> (MedPrism) — used to locate open-access versions of research papers by DOI. See <a href="https://unpaywall.org/legal" target="_blank" rel="noopener">unpaywall.org/legal</a>.</li>
+      <li><strong>Google Safe Browsing / VirusTotal / Cisco Umbrella</strong> (ScamPrism) — used to assess URLs and links for known threats. Each service's own privacy policy applies.</li>
+      <li><strong>CloudMailin / Resend</strong> (ScamPrism) — used to receive and send email for analysis. Email content is processed transiently and purged after analysis.</li>
+      <li><strong>Railway</strong> — our hosting provider. Data is stored on Railway's servers. See <a href="https://railway.app/legal/privacy" target="_blank" rel="noopener">railway.app/legal/privacy</a>.</li>
+      <li><strong>SendGrid</strong> — used to deliver communications by email when applicable. See <a href="https://www.twilio.com/legal/privacy" target="_blank" rel="noopener">twilio.com/legal/privacy</a>.</li>
     </ul>
+  </div>
 
+  <div class="section">
     <h2>4. Data Retention</h2>
     <ul>
       <li><strong>Email addresses</strong> — retained until you request deletion.</li>
       <li><strong>Access code records</strong> — retained for as long as the code is active. Disabled or deleted codes are removed from our database.</li>
-      <li><strong>Article content</strong> — not retained after analysis is returned to you.</li>
+      <li><strong>Submitted content</strong> — not retained after analysis is returned to you.</li>
+      <li><strong>MedPrism analysis results</strong> — retained for up to 48 hours to enable full report retrieval, then automatically purged.</li>
+      <li><strong>ScamPrism email content</strong> — automatically purged after 48 hours.</li>
+      <li><strong>Feedback comments</strong> — retained for product improvement; no personal information is attached.</li>
       <li><strong>Cookies and local storage</strong> — stored in your browser until you clear them.</li>
     </ul>
+  </div>
 
+  <div class="section">
     <h2>5. Your Rights</h2>
     <p>Depending on your location, you may have the following rights:</p>
-    <ul>
-      <li><strong>Access</strong> — request a copy of the personal data we hold about you</li>
-      <li><strong>Deletion</strong> — request that we delete your email address and associated records</li>
-      <li><strong>Correction</strong> — request correction of inaccurate data</li>
-      <li><strong>Opt-out</strong> — opt out of any future communications</li>
-    </ul>
-    <p>To exercise any of these rights, email us at <a href="mailto:support@pklmedialab.com">support@pklmedialab.com</a>. We will respond within 30 days.</p>
+    <div class="rights-grid">
+      <div class="right-card"><strong>Access</strong><span>Request a copy of the personal data we hold about you.</span></div>
+      <div class="right-card"><strong>Deletion</strong><span>Request that we delete your email address and associated records.</span></div>
+      <div class="right-card"><strong>Correction</strong><span>Request correction of inaccurate data we hold.</span></div>
+      <div class="right-card"><strong>Opt-out</strong><span>Opt out of any future communications from us.</span></div>
+    </div>
+    <p>To exercise any of these rights, email us at <a href="mailto:support@pklmedialab.com" style="color:var(--blue-mid);">support@pklmedialab.com</a>. We will respond within 30 days.</p>
+  </div>
 
+  <div class="section">
     <h2>6. Children's Privacy</h2>
     <p>Our apps are not directed at children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us and we will delete it promptly.</p>
+  </div>
 
+  <div class="section">
     <h2>7. Security</h2>
-    <p>We take reasonable measures to protect your information, including encrypted transmission (HTTPS) and restricted access to our database. However, no internet transmission is completely secure, and we cannot guarantee absolute security.</p>
+    <p>We take reasonable measures to protect your information, including encrypted transmission (HTTPS) and restricted access to our database and server infrastructure. However, no internet transmission is completely secure, and we cannot guarantee absolute security.</p>
+  </div>
 
+  <div class="section">
     <h2>8. Changes to This Policy</h2>
     <p>We may update this Privacy Policy from time to time. When we do, we will update the effective date above. Continued use of our apps after changes constitutes acceptance of the updated policy.</p>
+  </div>
 
+  <div class="section">
     <h2>9. Contact</h2>
-    <p>If you have any questions about this Privacy Policy or our data practices, please contact <a href="mailto:paul@pklmedialab.com">paul@pklmedialab.com</a>.</p>
-
-    <div class="footer">
-      © 2026 Paul Laikind, PhD. PKLMediaLab Apps. All rights reserved.
-      <p class="site-disclaimer" style="margin-top:18px;padding:14px 18px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:12px;line-height:1.7;text-align:left;">
-        <strong style="color:#b45309;">Informational only.</strong> TruthPrism and News-Distiller use AI to assess news articles. Output may be incomplete or incorrect. Always verify important information with primary sources before relying on it.
-      </p>
+    <div class="contact-box">
+      <p>Questions about this Privacy Policy or our data practices:<br>
+      <strong>Paul Laikind, PhD — PKL Media Lab</strong><br>
+      <a href="mailto:paul@pklmedialab.com">paul@pklmedialab.com</a> &nbsp;·&nbsp;
+      <a href="https://pklmedialab.com">pklmedialab.com</a></p>
     </div>
   </div>
+
+  <div class="advisory">
+    ⚠️ <strong>Informational only.</strong> PKL Media Lab apps use AI to analyze content. Output may be incomplete or incorrect. Always verify important information with primary sources before relying on it.
+  </div>
+
+  <p style="font-size:12px;color:var(--muted);margin-top:24px;text-align:center;">© 2026 Paul Laikind, PhD. PKL Media Lab. All rights reserved.</p>
+
+</div>
+
+<footer class="site-footer">
+  <p>PKL Media Lab &nbsp;·&nbsp; <a href="/">pklmedialab.com</a> &nbsp;·&nbsp; <a href="mailto:paul@pklmedialab.com">paul@pklmedialab.com</a></p>
+</footer>
+
 </body>
 </html>
