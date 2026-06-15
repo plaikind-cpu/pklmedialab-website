@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MedPrism — Medical Literature Integrity Checker</title>
+  <meta name="description" content="MedPrism analyzes published research papers for methodology, transparency, and publication integrity signals. Assess. Evaluate. Appraise."/>
+  <link rel="icon" href="assets/favicon.ico"/>
+  <style>
+    :root { --dark:#0D1525;--dark2:#162030;--border:#2a3a50;--mp-blue:#38BDF8;--mp-deep:#1B5E8A;--mp-end:#0ea5e9;--text:#e0e8f0;--muted:#6688aa;--white:#ffffff;--green:#1D9E75;--amber:#F59E0B;--red:#EF4444; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--dark);color:var(--text);line-height:1.7;}
+    nav{background:rgba(13,21,37,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:0 24px;position:sticky;top:0;z-index:100;display:flex;align-items:center;height:56px;}
+    .nav-logo{font-weight:800;font-size:15px;color:var(--white);text-decoration:none;margin-right:28px;display:flex;align-items:center;gap:8px;}
+    .nav-logo img{width:22px;height:22px;border-radius:4px;}
+    .nav-links{display:flex;gap:18px;flex:1;}
+    .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;}
+    .nav-links a:hover{color:var(--text);}
+    .nav-links a.active{color:var(--mp-blue);font-weight:600;}
+    .nav-right{display:flex;gap:8px;align-items:center;}
+    .nav-right a{font-size:12px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:20px;}
+    .nav-right a.cta{background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));color:white;border:none;font-weight:600;}
+
+    /* Hero */
+    .hero{text-align:center;padding:64px 24px 40px;max-width:720px;margin:0 auto;}
+    .hero-badge{display:inline-block;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.35);color:var(--mp-blue);font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:20px;letter-spacing:0.8px;}
+    .hero h1{font-size:clamp(26px,5vw,44px);font-weight:800;color:var(--white);line-height:1.2;margin-bottom:16px;}
+    .hero h1 span{background:linear-gradient(135deg,#38BDF8,#818CF8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero p{font-size:16px;color:var(--muted);margin-bottom:28px;line-height:1.75;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+    .btn-primary{background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;}
+    .btn-secondary{background:transparent;color:var(--mp-blue);padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;border:1px solid rgba(56,189,248,0.4);}
+
+    /* Splash image */
+    .splash-wrap{max-width:860px;margin:0 auto;padding:0 24px 48px;}
+    .splash-wrap img{width:100%;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.5);}
+
+    /* Verdict cards */
+    .verdicts-row{display:flex;gap:14px;justify-content:center;padding:0 24px 56px;flex-wrap:wrap;max-width:800px;margin:0 auto;}
+    .verdict-card{flex:1;min-width:200px;background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:22px;text-align:center;}
+    .verdict-icon{font-size:28px;margin-bottom:10px;}
+    .verdict-label{font-size:13px;font-weight:800;margin-bottom:8px;}
+    .verdict-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+    .v-green .verdict-label{color:#4ade80;}
+    .v-green{border-color:rgba(74,222,128,0.2);}
+    .v-amber .verdict-label{color:#fbbf24;}
+    .v-amber{border-color:rgba(251,191,36,0.2);}
+    .v-red .verdict-label{color:#f87171;}
+    .v-red{border-color:rgba(248,113,113,0.2);}
+
+    /* Sections */
+    .section{max-width:800px;margin:0 auto;padding:48px 24px;}
+    .section-title{font-size:24px;font-weight:800;color:var(--white);margin-bottom:8px;}
+    .section-sub{font-size:15px;color:var(--muted);margin-bottom:32px;}
+
+    /* Steps */
+    .steps{display:flex;flex-direction:column;gap:0;}
+    .step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--border);}
+    .step:last-child{border-bottom:none;}
+    .step-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;flex-shrink:0;margin-top:2px;}
+    .step-body h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px;}
+    .step-body p{font-size:14px;color:var(--muted);line-height:1.6;}
+    .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+    .badge-blue{background:rgba(56,189,248,0.15);color:var(--mp-blue);}
+    .badge-green{background:rgba(29,158,117,0.15);color:#4ade80;}
+
+    /* Flag severity examples */
+    .flag-row{display:flex;flex-direction:column;gap:8px;}
+    .flag-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--dark2);border:1px solid var(--border);border-radius:8px;}
+    .flag-sev{font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;white-space:nowrap;flex-shrink:0;}
+    .sev-high{background:rgba(239,68,68,0.15);color:#f87171;}
+    .sev-medium{background:rgba(245,158,11,0.15);color:#fbbf24;}
+    .sev-low{background:rgba(148,163,184,0.15);color:#94a3b8;}
+    .flag-desc{font-size:13px;color:var(--muted);}
+
+    /* Features grid */
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+    .feature-card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+    .feature-icon{font-size:22px;margin-bottom:10px;}
+    .feature-card h4{font-size:14px;font-weight:700;color:var(--white);margin-bottom:6px;}
+    .feature-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+
+    /* Info card */
+    .info-card{background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:28px;}
+    .info-card h3{font-size:16px;font-weight:700;color:var(--white);margin-bottom:12px;}
+    .tip{background:rgba(56,189,248,0.08);border-left:3px solid rgba(56,189,248,0.4);border-radius:0 6px 6px 0;padding:10px 14px;font-size:13px;color:var(--muted);margin:12px 0;}
+
+    /* Advisory */
+    .advisory{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:16px 20px;font-size:13px;color:#d4a843;line-height:1.7;margin-top:24px;}
+
+    /* CTA */
+    .cta-section{background:linear-gradient(135deg,#1a2a4a,#0D1525);border:1px solid var(--border);border-radius:16px;padding:48px 32px;text-align:center;max-width:800px;margin:0 auto 48px;}
+    .cta-section h2{font-size:26px;font-weight:800;color:var(--white);margin-bottom:12px;}
+    .cta-section p{color:var(--muted);margin-bottom:24px;}
+    .btn-cta{display:inline-block;background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));color:white;padding:13px 32px;border-radius:9px;text-decoration:none;font-weight:700;font-size:15px;margin:4px;}
+    .btn-email{display:inline-block;background:transparent;border:1px solid rgba(56,189,248,0.4);color:var(--mp-blue);padding:12px 28px;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;margin:4px;}
+
+    /* Footer */
+    footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;font-size:12px;color:var(--muted);}
+    footer a{color:var(--muted);text-decoration:none;margin:0 8px;}
+    .footer-nav{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:20px;}
+    .footer-section strong{display:block;color:var(--text);font-size:12px;margin-bottom:8px;}
+    .footer-section a{display:block;margin:3px 0;}
+
+    ol,ul{padding-left:20px;color:var(--muted);font-size:14px;}
+    li{margin-bottom:6px;}
+  </style>
+</head>
+<body>
+
+<!-- PKL Media Lab banner -->
+<div style="background:#0a1020;border-bottom:1px solid #1a2a40;padding:6px 24px;display:flex;align-items:center;justify-content:space-between;">
+  <a href="index.html" style="text-decoration:none;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:11px;font-weight:700;color:#38BDF8;letter-spacing:1px;text-transform:uppercase;">PKL Media Lab</span>
+    <span style="font-size:10px;color:#3a5070;">by Paul Laikind, PhD</span>
+  </a>
+  <span style="font-size:10px;color:#3a5070;">AI-powered tools for smarter research</span>
+</div>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="assets/icon128.png" alt="PKL Media Lab"/>AI Tools
+  </a>
+  <div class="nav-links">
+    <a href="medprism.html" class="active">MedPrism</a>
+    <a href="truthprism.html">TruthPrism</a>
+    <a href="nd-index.html">News-Distiller</a>
+  </div>
+  <div class="nav-right">
+    <a href="mailto:paul@pklmedialab.com?subject=MedPrism%20Access%20Code%20Request" class="cta">Request Access →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">MEDICAL LITERATURE INTEGRITY CHECKER · PRIVATE BETA</div>
+  <div style="font-size:13px;color:#38BDF8;margin-bottom:8px;text-align:center;">🔑 Invitation only — request an access code by email</div>
+  <h1>Read Research Papers<br/><span>With Clear Eyes.</span></h1>
+  <p>MedPrism analyzes published research papers for methodology, transparency, and publication integrity signals — helping clinicians and researchers quickly assess whether a paper warrants closer scrutiny before applying its findings.</p>
+  <div class="hero-btns">
+    <a href="https://medprism.app" target="_blank" class="btn-primary">Open MedPrism →</a>
+    <a href="mailto:paul@pklmedialab.com?subject=MedPrism%20Access%20Code%20Request" class="btn-secondary">Request Access</a>
+  </div>
+</div>
+
+<!-- Splash image -->
+<div class="splash-wrap">
+  <img src="assets/MedPrism_Splash.png" alt="MedPrism — Assess. Evaluate. Appraise."/>
+</div>
+
+<!-- Three verdicts -->
+<div class="verdicts-row">
+  <div class="verdict-card v-green">
+    <div class="verdict-icon">✓</div>
+    <div class="verdict-label">Read Carefully</div>
+    <div class="verdict-desc">No significant integrity concerns identified. The paper meets standard transparency and methodological reporting expectations.</div>
+  </div>
+  <div class="verdict-card v-amber">
+    <div class="verdict-icon">⚠</div>
+    <div class="verdict-label">Read Critically</div>
+    <div class="verdict-desc">One or more moderate integrity signals detected. Findings warrant closer evaluation before applying results.</div>
+  </div>
+  <div class="verdict-card v-red">
+    <div class="verdict-icon">✗</div>
+    <div class="verdict-label">Use With Caution</div>
+    <div class="verdict-desc">Significant integrity concerns identified. The paper should be carefully evaluated before its findings are relied upon.</div>
+  </div>
+</div>
+
+<!-- What it checks -->
+<div class="section">
+  <div class="section-title">What MedPrism Checks</div>
+  <div class="section-sub">A structured multi-pass analysis covering the integrity signals that matter most.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Statistical Methodology <span class="badge badge-blue">Claude AI</span></h3>
+        <p>Multiple comparisons without correction, post-hoc analyses presented as pre-specified, borderline p-values, effect size plausibility, and unusual statistical patterns that may indicate data issues.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Reporting Integrity <span class="badge badge-blue">Claude AI</span></h3>
+        <p>Selective outcome reporting, outcome switching between registration and publication, inconsistencies between methods and results sections, and overclaiming relative to study design.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Publication Integrity <span class="badge badge-green">Brave Search</span></h3>
+        <p>Retraction history, journal credibility screening, predatory publisher detection, DOI verification, and cross-referencing against external integrity databases.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Transparency Disclosures <span class="badge badge-blue">Claude AI</span></h3>
+        <p>Conflict of interest statements, data availability, funding disclosure, and trial or study pre-registration — assessed as informational disclosures, not as red flags.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Flag severities -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">Flagged Items</div>
+  <div class="section-sub">Each integrity concern is categorized by severity with a plain-language explanation and supporting excerpt from the paper.</div>
+  <div class="flag-row">
+    <div class="flag-item">
+      <span class="flag-sev sev-high">HIGH</span>
+      <span class="flag-desc">Serious concerns that materially affect confidence in the paper — undisclosed conflicts of interest in industry-sponsored trials, evidence of data manipulation, or publication in a known predatory journal.</span>
+    </div>
+    <div class="flag-item">
+      <span class="flag-sev sev-medium">MEDIUM</span>
+      <span class="flag-desc">Notable concerns warranting attention — multiple comparisons without correction, post-hoc analyses, selective outcome reporting, or borderline statistical significance.</span>
+    </div>
+    <div class="flag-item">
+      <span class="flag-sev sev-low">LOW</span>
+      <span class="flag-desc">Minor issues or areas of uncertainty — limited sample size relative to claims, missing standard reporting elements, or self-reported exposure data without validation.</span>
+    </div>
+  </div>
+</div>
+
+<!-- What you get -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">What You Get</div>
+  <div class="section-sub">Every analysis produces a full structured report you can save, share, or print as PDF.</div>
+  <div class="features">
+    <div class="feature-card"><div class="feature-icon">⚖️</div><h4>Verdict &amp; Gauge</h4><p>An assessment gauge and one of three verdicts — Read Carefully, Read Critically, or Use With Caution.</p></div>
+    <div class="feature-card"><div class="feature-icon">📋</div><h4>Plain-Language Briefing</h4><p>A concise summary of the paper's integrity profile written for a clinical audience — not a technical report.</p></div>
+    <div class="feature-card"><div class="feature-icon">🚩</div><h4>Detailed Flag Explanations</h4><p>Each flag includes severity, category, explanation, and a supporting excerpt from the paper itself.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔍</div><h4>Transparency Disclosures</h4><p>Structured assessment of COI statements, data availability, funding disclosure, and pre-registration.</p></div>
+    <div class="feature-card"><div class="feature-icon">🗄️</div><h4>Database Cross-Reference</h4><p>Retraction Watch, ClinicalTrials.gov, DOI verification, DOAJ status, and predatory publisher screening.</p></div>
+    <div class="feature-card"><div class="feature-icon">💾</div><h4>Full Report &amp; PDF</h4><p>Complete detailed analysis in a new tab — print or save as PDF directly from the browser.</p></div>
+  </div>
+</div>
+
+<!-- Chrome Extension -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">🧩 Chrome Extension</div>
+  <div class="section-sub">Analyze papers directly from PubMed or any journal page — without leaving your browser.</div>
+  <div class="info-card" style="border-color:rgba(56,189,248,0.3);">
+    <h3>Available on the Chrome Web Store</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;">Click the MedPrism toolbar button on any research article page. The side panel opens alongside the paper — MedPrism detects the article automatically and retrieves the full text where available. Works on PubMed, Cell Press, PLOS, bioRxiv, medRxiv, BMJ, Nature, and most journal sites.</p>
+    <div class="tip">💡 For PubMed pages, MedPrism automatically retrieves full text from PubMed Central where available. For paywalled content, ensure you are logged in to the journal site first.</div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px;">The extension requires the same access code as the web app. Request a code by email — access is free of charge.</p>
+    <a href="mailto:paul@pklmedialab.com?subject=MedPrism%20Access%20Code%20Request" style="display:inline-block;margin-top:12px;padding:10px 20px;background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));color:#fff;text-decoration:none;font-weight:700;font-size:0.88rem;border-radius:8px;">📧 Request Access Code</a>
+  </div>
+</div>
+
+<!-- Web app -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">🌐 MedPrism Web App</div>
+  <div class="section-sub">The full web app at medprism.app supports additional input options.</div>
+  <div class="info-card">
+    <h3>medprism.app</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px;">The web app accepts PDF uploads (including supplementary materials), direct text paste, and URL / PMID / DOI entry. For paywalled articles or when the extension cannot extract full text, download the PDF and upload it directly.</p>
+    <ul style="margin-bottom:16px;">
+      <li>PDF upload — drag and drop or browse, up to 40MB</li>
+      <li>Supplementary materials — attach a second PDF for inclusion in the analysis</li>
+      <li>URL / PMID / DOI — automatic retrieval from PubMed Central and open-access sources</li>
+      <li>Text paste — paste the full paper text directly</li>
+    </ul>
+    <a href="https://medprism.app" target="_blank" style="display:inline-block;padding:10px 20px;background:linear-gradient(135deg,var(--mp-deep),var(--mp-blue));color:#fff;text-decoration:none;font-weight:700;font-size:0.88rem;border-radius:8px;">Open MedPrism Web App →</a>
+  </div>
+</div>
+
+<!-- Advisory -->
+<div class="section" style="padding-top:0;">
+  <div class="advisory">
+    ⚠️ <strong>Advisory use only.</strong> MedPrism assesses methodology, transparency, and publication integrity signals only — not whether the science is correct or whether findings should be applied clinically. All outputs are advisory and do not constitute professional medical, scientific, or legal review. MedPrism is powered by Claude AI (Anthropic) and Brave Search. Artificial intelligence can and does make mistakes. All findings should be independently verified by qualified experts. By using MedPrism, users acknowledge these limitations and accept sole responsibility for decisions made based on MedPrism outputs. PKL Media Lab and Paul Laikind, PhD disclaim all liability.
+  </div>
+</div>
+
+<!-- CTA -->
+<div style="padding:0 24px 48px;">
+  <div class="cta-section">
+    <h2>Request Access to MedPrism</h2>
+    <p>MedPrism is currently in private beta. Access is free of charge — email to request an invitation code for the web app and Chrome extension.</p>
+    <a href="https://medprism.app" target="_blank" class="btn-cta">Open Web App →</a>
+    <a href="mailto:paul@pklmedialab.com?subject=MedPrism%20Access%20Code%20Request" class="btn-email">📧 Request Access Code</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-nav">
+    <div class="footer-section">
+      <strong>MedPrism</strong>
+      <a href="https://medprism.app" target="_blank">Web App</a>
+      <a href="mailto:paul@pklmedialab.com?subject=MedPrism%20Access%20Code%20Request">Request Access</a>
+    </div>
+    <div class="footer-section">
+      <strong>Other Apps</strong>
+      <a href="truthprism.html">TruthPrism</a>
+      <a href="nd-index.html">News-Distiller</a>
+    </div>
+    <div class="footer-section">
+      <strong>PKL Media Lab</strong>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <strong>Contact</strong>
+      <a href="mailto:paul@pklmedialab.com">paul@pklmedialab.com</a>
+      <a href="https://pklmedialab.com">pklmedialab.com</a>
+    </div>
+  </div>
+  <p>© 2026 Paul Laikind, PhD · PKL Media Lab · Powered by Claude AI &amp; Brave Search</p>
+</footer>
+
+</body>
+</html>

@@ -15,6 +15,8 @@
       --tp-end: #764ba2;
       --nd-primary: #11998e;
       --nd-end: #38ef7d;
+      --mp-primary: #1B5E8A;
+      --mp-end: #38BDF8;
       --bg: #0f0f1a;
       --bg2: #13131f;
       --card: rgba(255,255,255,0.04);
@@ -123,9 +125,11 @@
     }
     .badge-tp { background: rgba(102,126,234,0.12); border: 1px solid rgba(102,126,234,0.3); color: #a8b8ff; }
     .badge-nd { background: rgba(17,153,142,0.12); border: 1px solid rgba(17,153,142,0.3); color: #38ef7d; }
+    .badge-mp { background: rgba(27,94,138,0.18); border: 1px solid rgba(56,189,248,0.3); color: #38BDF8; }
     .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
     .badge-dot-tp { background: #667eea; }
     .badge-dot-nd { background: #38ef7d; }
+    .badge-dot-mp { background: #38BDF8; }
 
     .app-card-body h2 { font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
     .app-card-body p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.75; flex: 1; }
@@ -135,6 +139,7 @@
     .app-features li::before { content: '✓'; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
     .feat-tp li::before { color: #667eea; }
     .feat-nd li::before { color: #38ef7d; }
+    .feat-mp li::before { color: #38BDF8; }
 
     .app-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .btn-tp {
@@ -151,6 +156,13 @@
       border-radius: 9px; transition: opacity 0.2s;
     }
     .btn-nd:hover { opacity: 0.88; }
+    .btn-mp {
+      display: inline-block; padding: 11px 22px;
+      background: linear-gradient(135deg, var(--mp-primary), var(--mp-end));
+      color: #fff; text-decoration: none; font-weight: 700; font-size: 0.88rem;
+      border-radius: 9px; transition: opacity 0.2s;
+    }
+    .btn-mp:hover { opacity: 0.88; }
     .btn-outline {
       display: inline-block; padding: 11px 20px;
       background: transparent; border: 1px solid var(--card-border);
@@ -370,6 +382,7 @@
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links">
+      <li><a href="medprism.html">MedPrism</a></li>
       <li><a href="truthprism.html">TruthPrism About</a></li>
       <li><a href="get-started.html">TruthPrism Get Started</a></li>
       <li><a href="nd-index.html">News-Distiller About</a></li>
@@ -411,6 +424,32 @@
 <!-- APP CARDS -->
 <section class="apps-section">
   <div class="apps-grid">
+
+    <!-- MedPrism -->
+    <div class="app-card">
+      <a class="app-card-splash" href="medprism.html">
+        <img src="assets/MedPrism_Splash.png" alt="MedPrism — Medical Literature Integrity Checker" style="max-height:260px;width:100%;object-fit:cover;display:block;"/>
+        <div class="splash-overlay"></div>
+        <span class="splash-launch">Explore →</span>
+      </a>
+      <div class="app-card-body">
+        <div class="app-badge badge-mp"><span class="badge-dot badge-dot-mp"></span>Literature Integrity Checker</div>
+        <div style="display:inline-block;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38BDF8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;">🔑 Private Beta · Invitation Only</div>
+        <h2>MedPrism</h2>
+        <p>Analyze published research papers for methodology, transparency, and publication integrity signals — directly from PubMed or any journal page. Read research with clear eyes.</p>
+        <ul class="app-features feat-mp">
+          <li>Verdict — Read Carefully, Read Critically, or Use With Caution</li>
+          <li>Flags methodology, statistics, and reporting integrity concerns</li>
+          <li>Transparency disclosures — COI, data availability, funding, pre-registration</li>
+          <li>Database cross-reference — Retraction Watch, DOAJ, ClinicalTrials.gov</li>
+          <li>Chrome extension — analyze directly from PubMed or any journal page</li>
+        </ul>
+        <div class="app-actions">
+          <a href="medprism.html" class="btn-mp">Learn More →</a>
+          <a href="https://medprism.app" target="_blank" class="btn-outline">Open App</a>
+        </div>
+      </div>
+    </div>
 
     <!-- News-Distiller -->
     <div class="app-card">
