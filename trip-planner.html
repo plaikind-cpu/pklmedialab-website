@@ -3,385 +3,669 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>San Diego → Moose Lake Resort | PKL Trip Planner</title>
+<title>PKL Trip Planner — San Diego to Moose Lake</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a18; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a18; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-  header { background: #1a1a18; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 18px; font-weight: 500; }
-  header p { font-size: 13px; color: #aaa; margin-top: 2px; }
-  .header-badge { background: #2a6ebb; color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+/* ── Header ── */
+header { background: #1a1a18; color: #fff; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
+.route-tabs { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.route-tab { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #444; background: transparent; color: #ccc; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.route-tab:hover { border-color: #888; color: #fff; }
+.route-tab.active { background: #2a6ebb; border-color: #2a6ebb; color: #fff; }
 
-  .controls { background: #fff; border-bottom: 1px solid #e0dfd8; padding: 12px 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .controls label { font-size: 13px; color: #555; font-weight: 500; }
-  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .toggle-btn { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #d0cfc8; background: #fff; cursor: pointer; color: #444; transition: all 0.15s; }
-  .toggle-btn.active { background: #1a1a18; color: #fff; border-color: #1a1a18; }
-  .toggle-btn.opt-active { background: #854f0b; color: #fff; border-color: #854f0b; }
-  .divider { width: 1px; background: #e0dfd8; height: 28px; }
+/* ── Controls ── */
+.controls { background: #fff; border-bottom: 1px solid #e0dfd8; padding: 8px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+.ctrl-label { font-size: 12px; color: #888; font-weight: 500; white-space: nowrap; }
+.toggle-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 1.5px solid #d0cfc8; background: #fff; cursor: pointer; color: #555; transition: all 0.15s; white-space: nowrap; }
+.toggle-btn.active { background: #1a1a18; color: #fff; border-color: #1a1a18; }
+.toggle-btn.opt-active { background: #854f0b; color: #fff; border-color: #854f0b; }
+.divider { width: 1px; background: #e0dfd8; height: 24px; flex-shrink: 0; }
+.search-wrap { display: flex; gap: 6px; align-items: center; }
+#place-search { font-size: 12px; padding: 4px 8px; border: 1px solid #d0cfc8; border-radius: 4px; width: 180px; }
+#add-stop-btn { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1.5px solid #2a6ebb; background: #fff; color: #2a6ebb; cursor: pointer; }
+#add-stop-btn:hover { background: #2a6ebb; color: #fff; }
 
-  .main { display: flex; height: calc(100vh - 110px); }
+/* ── Main layout ── */
+.main { display: flex; flex: 1; min-height: 0; }
+#map { flex: 1; min-width: 0; }
 
-  #map { flex: 1; min-width: 0; }
+/* ── Sidebar ── */
+.sidebar { width: 340px; flex-shrink: 0; overflow-y: auto; background: #fff; border-left: 1px solid #e0dfd8; display: flex; flex-direction: column; }
+.sidebar-header { background: #f5f4f0; padding: 8px 14px; font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e0dfd8; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+.sidebar-header span { color: #2a6ebb; font-size: 10px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.stops-list { flex: 1; overflow-y: auto; }
 
-  .sidebar { width: 360px; flex-shrink: 0; overflow-y: auto; background: #fff; border-left: 1px solid #e0dfd8; }
+/* ── Day cards ── */
+.day-card { border-bottom: 1px solid #e0dfd8; padding: 11px 14px; cursor: pointer; transition: background 0.1s; border-left: 3px solid transparent; position: relative; }
+.day-card:hover { background: #f9f8f5; }
+.day-card.active { background: #f0f4ff; border-left-color: #2a6ebb; }
+.day-card.type-home { border-left-color: #534ab7; background: #faf9ff; }
+.day-card.type-optional { border-left-color: #854f0b; background: #fffaf4; opacity: 0.85; }
+.day-card.type-dayvisit { border-left-color: #888780; }
+.day-card.type-destination { border-left-color: #0f6e56; background: #f4fdf9; }
+.day-card.type-custom { border-left-color: #d4537e; }
+.day-label { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.04em; }
+.day-title { font-size: 13px; font-weight: 600; margin: 2px 0; color: #1a1a18; padding-right: 20px; }
+.day-sub { font-size: 11px; color: #777; }
+.day-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+.badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 500; }
+.bg-green { background: #eaf3de; color: #3b6d11; }
+.bg-gray { background: #f0efe8; color: #5f5e5a; border: 1px solid #d3d1c7; }
+.bg-amber { background: #faeeda; color: #633806; }
+.bg-blue { background: #e6f1fb; color: #0c447c; }
+.bg-purple { background: #eeedfe; color: #3c3489; }
+.bg-teal { background: #e1f5ee; color: #085041; }
+.bg-pink { background: #fbeaf0; color: #72243e; }
+.day-note { font-size: 11px; color: #777; margin-top: 5px; line-height: 1.5; }
+.temp { font-size: 11px; color: #999; margin-top: 3px; }
+.temp .hot { color: #a32d2d; font-weight: 600; }
+.temp .mid { color: #854f0b; font-weight: 600; }
+.temp .ok { color: #444; font-weight: 600; }
+.temp .cool { color: #185fa5; font-weight: 600; }
+.remove-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 3px; }
+.remove-btn:hover { color: #e24b4a; background: #fcebeb; }
 
-  .day-card { border-bottom: 1px solid #e0dfd8; padding: 14px 16px; cursor: pointer; transition: background 0.1s; }
-  .day-card:hover { background: #f9f8f5; }
-  .day-card.active { background: #f0f4ff; border-left: 3px solid #2a6ebb; }
-  .day-card.optional { border-left: 3px solid #854f0b; background: #fffaf4; }
-  .day-card.home-stop { border-left: 3px solid #534ab7; background: #faf9ff; }
-  .day-card.destination { border-left: 3px solid #0f6e56; background: #f4fdf9; }
+/* ── Info banner ── */
+.info-banner { margin: 8px 12px; padding: 7px 10px; border-radius: 6px; font-size: 11px; line-height: 1.5; }
+.banner-amber { background: #fff8ee; border: 1px solid #f0c070; color: #633806; }
+.banner-blue { background: #e6f1fb; border: 1px solid #85b7eb; color: #042c53; }
 
-  .day-label { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-  .day-title { font-size: 14px; font-weight: 600; margin: 3px 0; color: #1a1a18; }
-  .day-sub { font-size: 12px; color: #666; margin-bottom: 6px; }
-  .day-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-  .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
-  .badge-green { background: #eaf3de; color: #3b6d11; }
-  .badge-gray { background: #f0efe8; color: #5f5e5a; border: 1px solid #d3d1c7; }
-  .badge-amber { background: #faeeda; color: #633806; }
-  .badge-blue { background: #e6f1fb; color: #0c447c; }
-  .badge-purple { background: #eeedfe; color: #3c3489; }
-  .badge-teal { background: #e1f5ee; color: #085041; }
-  .day-note { font-size: 11px; color: #777; margin-top: 6px; line-height: 1.5; }
-  .temp { font-size: 11px; color: #888; }
-  .temp span { font-weight: 600; }
-  .temp .hot { color: #a32d2d; }
-  .temp .mid { color: #854f0b; }
-  .temp .ok { color: #444; }
-  .temp .cool { color: #185fa5; }
+/* ── URL share bar ── */
+.share-bar { border-top: 1px solid #e0dfd8; padding: 8px 12px; display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.share-bar input { flex: 1; font-size: 10px; padding: 4px 6px; border: 1px solid #d0cfc8; border-radius: 4px; color: #555; background: #f9f8f5; }
+.share-bar button { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1.5px solid #2a6ebb; background: #fff; color: #2a6ebb; cursor: pointer; white-space: nowrap; }
+.share-bar button:hover { background: #2a6ebb; color: #fff; }
 
-  .opt-banner { background: #fff8ee; border: 1px solid #f0c070; border-radius: 6px; padding: 8px 10px; margin: 8px 16px; font-size: 11.5px; color: #633806; line-height: 1.5; }
-  .sturgis-banner { background: #fff0f0; border: 1px solid #f0a0a0; border-radius: 6px; padding: 8px 10px; margin: 8px 16px; font-size: 11.5px; color: #791f1f; line-height: 1.5; }
+/* ── Info window ── */
+.iw { max-width: 240px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.iw h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.iw .iw-sub { font-size: 11px; color: #666; margin-bottom: 5px; }
+.iw table { width: 100%; font-size: 11px; border-collapse: collapse; }
+.iw td { padding: 2px 0; }
+.iw td:first-child { color: #999; padding-right: 8px; white-space: nowrap; }
+.iw td:last-child { font-weight: 500; }
+.iw .iw-note { font-size: 11px; color: #666; margin-top: 5px; line-height: 1.5; border-top: 1px solid #eee; padding-top: 5px; }
 
-  .section-header { background: #f5f4f0; padding: 8px 16px; font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e0dfd8; }
-
-  .info-window { max-width: 260px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  .info-window h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: #1a1a18; }
-  .info-window .iw-sub { font-size: 12px; color: #666; margin-bottom: 6px; }
-  .info-window .iw-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
-  .info-window .iw-label { color: #888; }
-  .info-window .iw-val { font-weight: 500; color: #1a1a18; }
-  .info-window .iw-note { font-size: 11px; color: #666; margin-top: 6px; line-height: 1.5; border-top: 1px solid #eee; padding-top: 6px; }
-
-  @media (max-width: 700px) {
-    .main { flex-direction: column; height: auto; }
-    #map { height: 50vh; }
-    .sidebar { width: 100%; height: auto; border-left: none; border-top: 1px solid #e0dfd8; }
-  }
+@media (max-width: 700px) {
+  .main { flex-direction: column; }
+  #map { height: 45vh; }
+  .sidebar { width: 100%; height: 55vh; border-left: none; border-top: 1px solid #e0dfd8; }
+  #place-search { width: 130px; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>San Diego → Moose Lake Resort</h1>
-    <p>Outbound Route · August 2025 · PKL Media Lab</p>
-  </div>
-  <div class="header-badge">TR National Park Variant</div>
+  <h1>PKL Trip Planner &mdash; San Diego → Moose Lake</h1>
+  <div class="route-tabs" id="route-tabs"></div>
 </header>
 
 <div class="controls">
-  <label>Route options:</label>
-  <div class="toggle-group">
-    <button class="toggle-btn active" id="btn-craters" onclick="toggleOptional('craters', this)">Craters of the Moon (optional)</button>
-    <button class="toggle-btn" id="btn-detroit" onclick="toggleOptional('detroit', this)">Detroit Lakes stopover (optional)</button>
-  </div>
+  <span class="ctrl-label">Options:</span>
+  <div id="toggle-container" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
   <div class="divider"></div>
-  <label>Show:</label>
-  <div class="toggle-group">
-    <button class="toggle-btn active" id="btn-route" onclick="toggleRoute(this)">Route line</button>
+  <button class="toggle-btn active" id="btn-route" onclick="toggleRoute(this)">Route line</button>
+  <div class="divider"></div>
+  <div class="search-wrap">
+    <input type="text" id="place-search" placeholder="Search to add waypoint…" />
+    <button id="add-stop-btn" onclick="addSearchedPlace()">Add stop</button>
   </div>
 </div>
 
 <div class="main">
   <div id="map"></div>
   <div class="sidebar">
-    <div class="sturgis-banner">
-      <strong>Sturgis Rally ~Aug 4–13:</strong> Your Aug 3 departure puts Devils Tower on ~Aug 6 and Black Hills ~Aug 7–8. You're fine with rally crowds — just book ahead.
+    <div class="sidebar-header">
+      <span id="route-title">Route</span>
+      <span onclick="resetRoute()" title="Reset to default stops">Reset</span>
     </div>
-
-    <div class="section-header">Outbound — 7 driving days</div>
-
-    <div class="day-card" id="card-0" onclick="focusStop(0)">
-      <div class="day-label">Day 1 · Aug 3</div>
-      <div class="day-title">Bryce Canyon NP, UT</div>
-      <div class="day-sub">North Campground · ~370 mi · ~6 hrs</div>
-      <div class="day-meta">
-        <span class="badge badge-green">Electric hookups</span>
-      </div>
-      <div class="temp">Aug avg: <span class="ok">80°F</span> / <span class="cool">47°F</span></div>
-      <div class="day-note">8,000 ft — cool and ideal for dogs. Chase cancellations on recreation.gov. Fill gas after crossing into NV, not CA.</div>
+    <div class="stops-list" id="stops-list"></div>
+    <div class="share-bar">
+      <input type="text" id="share-url" readonly placeholder="Share URL appears here…" onclick="this.select()" />
+      <button onclick="copyShareUrl()">Copy link</button>
     </div>
-
-    <div class="day-card home-stop" id="card-1" onclick="focusStop(1)">
-      <div class="day-label">Day 2 · Aug 4</div>
-      <div class="day-title">Park City, UT — Home</div>
-      <div class="day-sub">~240 mi · ~3.5 hrs · Stay 1–2 nights</div>
-      <div class="day-meta">
-        <span class="badge badge-purple">Home stop</span>
-      </div>
-      <div class="temp">Aug avg: <span class="ok">84°F</span> / <span class="cool">53°F</span></div>
-      <div class="day-note">6,900 ft elevation — comfortable for dogs. Rest, resupply, show friend the area.</div>
-    </div>
-
-    <div class="day-card optional" id="card-2" onclick="focusStop(2)">
-      <div class="day-label">Day 3 · Aug 5</div>
-      <div class="day-title">Cody, WY</div>
-      <div class="day-sub">Shoshone NF or Buffalo Bill SP</div>
-      <div class="day-meta">
-        <span class="badge badge-green">Electric hookups</span>
-        <span class="badge badge-amber">Optional: Craters stop</span>
-      </div>
-      <div class="temp">Aug avg: <span class="mid">88°F</span> / <span class="cool">54°F</span></div>
-      <div class="day-note">Direct: ~5.5 hrs · Via Craters of the Moon: ~7.5 hrs. Dogs restricted to roads at Craters. Book via wyoparks.wyo.gov.</div>
-    </div>
-
-    <div class="day-card optional" id="card-craters" onclick="focusStop('craters')" style="display:none; opacity:0.7;">
-      <div class="day-label">Optional stop · Day 3</div>
-      <div class="day-title">Craters of the Moon NM</div>
-      <div class="day-sub">2-hr visit en route to Cody</div>
-      <div class="day-meta">
-        <span class="badge badge-amber">No overnight · Day stop only</span>
-      </div>
-      <div class="day-note">Surreal volcanic landscape, lava tubes, cinder cones. Dogs on roads/parking areas only — sharp lava on trails. Adds ~2 hrs to Day 3.</div>
-    </div>
-
-    <div class="day-card" id="card-3" onclick="focusStop(3)">
-      <div class="day-label">Day 4 · Aug 6</div>
-      <div class="day-title">Devils Tower NM, WY</div>
-      <div class="day-sub">Belle Fourche River CG · ~130 mi · ~2.5 hrs</div>
-      <div class="day-meta">
-        <span class="badge badge-gray">No hookups</span>
-      </div>
-      <div class="temp">Aug avg: <span class="mid">88°F</span> / <span class="cool">58°F</span></div>
-      <div class="day-note">First-come, first-served — arrive by noon. 43 pull-through sites. KOA just outside gate has hookups as backup. Sturgis week — expect more traffic.</div>
-    </div>
-
-    <div class="day-card" id="card-4" onclick="focusStop(4)">
-      <div class="day-label">Day 5 · Aug 7</div>
-      <div class="day-title">Custer State Park, SD</div>
-      <div class="day-sub">Via Mt. Rushmore · ~100 mi · ~2 hrs</div>
-      <div class="day-meta">
-        <span class="badge badge-green">Electric hookups</span>
-      </div>
-      <div class="temp">Aug avg: <span class="ok">82°F</span> / <span class="cool">52°F</span></div>
-      <div class="day-note">Stop at Mt. Rushmore en route — the main event for your friend. Book via campsd.com — 90 days out at 7am CT. Window already past for Aug 7, chase cancellations. Consider 2 nights for Needles Hwy and Crazy Horse.</div>
-    </div>
-
-    <div class="day-card" id="card-5" onclick="focusStop(5)">
-      <div class="day-label">Day 6 · Aug 8</div>
-      <div class="day-title">TR NP South Unit — Medora, ND</div>
-      <div class="day-sub">Cottonwood CG · ~240 mi · ~4 hrs</div>
-      <div class="day-meta">
-        <span class="badge badge-gray">No hookups</span>
-        <span class="badge badge-blue">New stop</span>
-      </div>
-      <div class="temp">Aug avg: <span class="mid">86°F</span> / <span class="cool">59°F</span></div>
-      <div class="day-note">Cottonwood CG on Little Missouri River — bison may wander through camp. Reserve odd-numbered sites up to 6 months ahead on recreation.gov. 36-mile scenic loop drive, wild horses, prairie dogs. Dogs on roads only. Medora town is walkable for dinner. TR Presidential Library opened July 4, 2026.</div>
-    </div>
-
-    <div class="day-card optional" id="card-detroit" onclick="focusStop('detroit')" style="display:none; opacity:0.7;">
-      <div class="day-label">Optional stop · Day 7</div>
-      <div class="day-title">Detroit Lakes, MN</div>
-      <div class="day-sub">Overnight option · ~5 hrs from Medora</div>
-      <div class="day-meta">
-        <span class="badge badge-amber">Optional overnight</span>
-        <span class="badge badge-green">Hookups available</span>
-      </div>
-      <div class="day-note">Splits the Medora → Moose Lake leg into 5 hrs + 2.5 hrs. Minnesota lakes country — mile-long sandy beach in town. American Legion Campground has full hookups across from beach. Comfortable August stop for dogs.</div>
-    </div>
-
-    <div class="day-card destination" id="card-6" onclick="focusStop(6)">
-      <div class="day-label">Day 7 · Aug 9</div>
-      <div class="day-title">Moose Lake Resort, MN</div>
-      <div class="day-sub">~450 mi · ~7.5 hrs · (or 2.5 hrs via Detroit Lakes)</div>
-      <div class="day-meta">
-        <span class="badge badge-teal">Family property</span>
-      </div>
-      <div class="temp">Aug avg: <span class="ok">80°F</span> / <span class="cool">56°F</span></div>
-      <div class="day-note">Stennes and Buhns Moose Lake Resort, Blackduck MN. Chippewa National Forest. No reservation needed. I-94 east all the way from Medora — start early for single-day push.</div>
-    </div>
-
-    <div class="opt-banner">
-      <strong>Detroit Lakes option:</strong> Toggle above to show as an overnight split. Medora → Detroit Lakes ~5 hrs, Detroit Lakes → Moose Lake ~2.5 hrs.
-    </div>
-
   </div>
 </div>
 
 <script>
-const API_KEY = 'AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk';
+// ═══════════════════════════════════════════════════════════════
+//  ROUTE DATA — edit this section to add/change routes
+//  Each route has: id, name, description, toggles[], stops[]
+//  Stop types: overnight, home, dayvisit, optional, destination, custom
+// ═══════════════════════════════════════════════════════════════
 
-const stops = [
+const ROUTES = [
+
+  // ── ROUTE A: Black Hills + Badlands ──────────────────────────
   {
-    id: 'bryce', day: 1, label: 'Day 1 — Bryce Canyon NP',
-    lat: 37.6365, lng: -112.1669,
-    title: 'North Campground — Bryce Canyon NP',
-    sub: 'Aug 3 · Night 1',
-    drive: '~6 hrs from San Diego',
-    temp: '80°F / 47°F',
-    hookups: 'Electric hookups',
-    note: '8,000 ft elevation. Cool for dogs. Chase cancellations on recreation.gov.',
-    color: '#2a6ebb', optional: false
+    id: 'A',
+    name: 'Route A — Badlands',
+    description: '7 days · Black Hills + Badlands NP',
+    toggles: [
+      { id: 'craters', label: 'Craters of Moon (Day 3)', defaultOn: false }
+    ],
+    stops: [
+      {
+        id: 'bryce', type: 'overnight', day: 1, date: 'Aug 3',
+        title: 'North Campground — Bryce Canyon NP, UT',
+        sub: '~370 mi · ~6 hrs from San Diego',
+        lat: 37.6365, lng: -112.1669,
+        hookups: 'Electric hookups', temp: '80°F / 47°F', tempClass: 'ok / cool',
+        note: '8,000 ft — cool for dogs. Chase cancellations on recreation.gov. Fill gas after crossing into NV.'
+      },
+      {
+        id: 'parkcity', type: 'home', day: 2, date: 'Aug 4',
+        title: 'Park City, UT — Home',
+        sub: '~240 mi · ~3.5 hrs · Stay 1–2 nights',
+        lat: 40.6461, lng: -111.498,
+        hookups: 'Home stop', temp: '84°F / 53°F', tempClass: 'ok / cool',
+        note: '6,900 ft. Rest, resupply, show friend the area.'
+      },
+      {
+        id: 'craters', type: 'optional', toggleId: 'craters',
+        title: 'Craters of the Moon NM — Optional Day Stop',
+        sub: 'En route Park City → Cody · adds ~2 hrs',
+        lat: 43.1718, lng: -113.4821,
+        hookups: 'No overnight', temp: '80°F / 45°F', tempClass: 'ok / cool',
+        note: 'Surreal volcanic landscape. Dogs on roads/parking only. Lava tubes, cinder cones.'
+      },
+      {
+        id: 'cody', type: 'overnight', day: 3, date: 'Aug 5',
+        title: 'Cody, WY — Shoshone NF or Buffalo Bill SP',
+        sub: '~340 mi direct / ~430 via Craters · ~5.5 / 7.5 hrs',
+        lat: 44.5263, lng: -109.0565,
+        hookups: 'Electric hookups', temp: '88°F / 54°F', tempClass: 'mid / cool',
+        note: 'Buffalo Bill SP has electric sites. Book wyoparks.wyo.gov.'
+      },
+      {
+        id: 'devils', type: 'overnight', day: 4, date: 'Aug 6',
+        title: 'Devils Tower NM — Belle Fourche River CG',
+        sub: '~130 mi · ~2.5 hrs from Cody',
+        lat: 44.5902, lng: -104.7146,
+        hookups: 'No hookups', temp: '88°F / 58°F', tempClass: 'mid / cool',
+        note: 'First-come, first-served — arrive by noon. KOA just outside gate has hookups as backup.'
+      },
+      {
+        id: 'rushmore', type: 'dayvisit',
+        title: 'Mt. Rushmore — Day Visit',
+        sub: 'En route Devils Tower → Custer SP',
+        lat: 43.8803, lng: -103.4538,
+        hookups: 'Day visit only', temp: '82°F / 52°F', tempClass: 'ok / cool',
+        note: 'Main attraction for your friend. Then continue ~30 min to Custer SP.'
+      },
+      {
+        id: 'custer', type: 'overnight', day: 5, date: 'Aug 7',
+        title: 'Custer State Park, SD',
+        sub: '~100 mi via Rushmore · ~2 hrs',
+        lat: 43.7325, lng: -103.4133,
+        hookups: 'Electric hookups (30-amp)', temp: '82°F / 52°F', tempClass: 'ok / cool',
+        note: 'Chase cancellations at campsd.com. Consider 2 nights — Needles Hwy, Crazy Horse nearby.'
+      },
+      {
+        id: 'badlands', type: 'overnight', day: 6, date: 'Aug 8',
+        title: 'Badlands NP — Cedar Pass Campground, SD',
+        sub: '~90 mi · ~1.5 hrs from Custer SP',
+        lat: 43.7464, lng: -101.9466,
+        hookups: 'Limited (23 of 96 sites)', temp: '90°F / 62°F', tempClass: 'hot / ok',
+        note: 'Overbooking issues reported — call to confirm. Very exposed, little shade. Hot in Aug.'
+      },
+      {
+        id: 'detroit-a', type: 'optional', toggleId: 'detroit-a',
+        title: 'Detroit Lakes, MN — Optional Overnight',
+        sub: '~5 hrs from Badlands · splits final leg',
+        lat: 46.8172, lng: -96.6836,
+        hookups: 'Full hookups available', temp: '82°F / 59°F', tempClass: 'ok / cool',
+        note: 'Splits Badlands → Moose Lake into 5 hrs + 2.5 hrs. American Legion CG has full hookups.'
+      },
+      {
+        id: 'moose-a', type: 'destination', day: 7, date: 'Aug 9',
+        title: 'Stennes & Buhns Moose Lake Resort, MN',
+        sub: '~600 mi · ~8.5 hrs from Badlands (or 2.5 from Detroit Lakes)',
+        lat: 47.5413, lng: -94.4773,
+        hookups: 'Family property', temp: '80°F / 56°F', tempClass: 'ok / cool',
+        note: 'Blackduck MN. Chippewa National Forest. No reservation needed. Start early.'
+      }
+    ]
   },
+
+  // ── ROUTE B: Black Hills + TR National Park ──────────────────
   {
-    id: 'parkcity', day: 2, label: 'Day 2 — Park City, UT',
-    lat: 40.6461, lng: -111.498,
-    title: 'Park City, UT — Home',
-    sub: 'Aug 4 · Night 2 (1–2 nights)',
-    drive: '~3.5 hrs from Bryce',
-    temp: '84°F / 53°F',
-    hookups: 'Home stop',
-    note: '6,900 ft. Rest and resupply.',
-    color: '#534ab7', optional: false
+    id: 'B',
+    name: 'Route B — TR National Park',
+    description: '7 days · Black Hills + Theodore Roosevelt NP',
+    toggles: [
+      { id: 'craters', label: 'Craters of Moon (Day 3)', defaultOn: false },
+      { id: 'detroit-b', label: 'Detroit Lakes stopover', defaultOn: false }
+    ],
+    stops: [
+      {
+        id: 'bryce', type: 'overnight', day: 1, date: 'Aug 3',
+        title: 'North Campground — Bryce Canyon NP, UT',
+        sub: '~370 mi · ~6 hrs from San Diego',
+        lat: 37.6365, lng: -112.1669,
+        hookups: 'Electric hookups', temp: '80°F / 47°F', tempClass: 'ok / cool',
+        note: '8,000 ft — cool for dogs. Chase cancellations on recreation.gov. Fill gas after crossing into NV.'
+      },
+      {
+        id: 'parkcity', type: 'home', day: 2, date: 'Aug 4',
+        title: 'Park City, UT — Home',
+        sub: '~240 mi · ~3.5 hrs · Stay 1–2 nights',
+        lat: 40.6461, lng: -111.498,
+        hookups: 'Home stop', temp: '84°F / 53°F', tempClass: 'ok / cool',
+        note: '6,900 ft. Rest, resupply, show friend the area.'
+      },
+      {
+        id: 'craters', type: 'optional', toggleId: 'craters',
+        title: 'Craters of the Moon NM — Optional Day Stop',
+        sub: 'En route Park City → Cody · adds ~2 hrs',
+        lat: 43.1718, lng: -113.4821,
+        hookups: 'No overnight', temp: '80°F / 45°F', tempClass: 'ok / cool',
+        note: 'Surreal volcanic landscape. Dogs on roads/parking only. Lava tubes, cinder cones.'
+      },
+      {
+        id: 'cody', type: 'overnight', day: 3, date: 'Aug 5',
+        title: 'Cody, WY — Shoshone NF or Buffalo Bill SP',
+        sub: '~340 mi direct / ~430 via Craters · ~5.5 / 7.5 hrs',
+        lat: 44.5263, lng: -109.0565,
+        hookups: 'Electric hookups', temp: '88°F / 54°F', tempClass: 'mid / cool',
+        note: 'Buffalo Bill SP has electric sites. Book wyoparks.wyo.gov.'
+      },
+      {
+        id: 'devils', type: 'overnight', day: 4, date: 'Aug 6',
+        title: 'Devils Tower NM — Belle Fourche River CG',
+        sub: '~130 mi · ~2.5 hrs from Cody',
+        lat: 44.5902, lng: -104.7146,
+        hookups: 'No hookups', temp: '88°F / 58°F', tempClass: 'mid / cool',
+        note: 'First-come, first-served — arrive by noon. KOA just outside gate has hookups as backup.'
+      },
+      {
+        id: 'rushmore', type: 'dayvisit',
+        title: 'Mt. Rushmore — Day Visit',
+        sub: 'En route Devils Tower → Custer SP',
+        lat: 43.8803, lng: -103.4538,
+        hookups: 'Day visit only', temp: '82°F / 52°F', tempClass: 'ok / cool',
+        note: 'Main attraction for your friend. Then continue ~30 min to Custer SP.'
+      },
+      {
+        id: 'custer', type: 'overnight', day: 5, date: 'Aug 7',
+        title: 'Custer State Park, SD',
+        sub: '~100 mi via Rushmore · ~2 hrs',
+        lat: 43.7325, lng: -103.4133,
+        hookups: 'Electric hookups (30-amp)', temp: '82°F / 52°F', tempClass: 'ok / cool',
+        note: 'Chase cancellations at campsd.com. Consider 2 nights — Needles Hwy, Crazy Horse nearby.'
+      },
+      {
+        id: 'trnp', type: 'overnight', day: 6, date: 'Aug 8',
+        title: 'TR NP South Unit — Cottonwood CG, Medora ND',
+        sub: '~240 mi · ~4 hrs from Custer SP',
+        lat: 46.9164, lng: -103.5258,
+        hookups: 'No hookups — primitive', temp: '86°F / 59°F', tempClass: 'mid / cool',
+        note: 'Reserve odd-numbered sites on recreation.gov (6 months ahead). Bison wander through camp. TR Presidential Library now open in Medora.'
+      },
+      {
+        id: 'detroit-b', type: 'optional', toggleId: 'detroit-b',
+        title: 'Detroit Lakes, MN — Optional Overnight',
+        sub: '~5 hrs from Medora · splits final leg',
+        lat: 46.8172, lng: -96.6836,
+        hookups: 'Full hookups available', temp: '82°F / 59°F', tempClass: 'ok / cool',
+        note: 'Splits Medora → Moose Lake into 5 hrs + 2.5 hrs. American Legion CG has full hookups.'
+      },
+      {
+        id: 'moose-b', type: 'destination', day: 7, date: 'Aug 9',
+        title: 'Stennes & Buhns Moose Lake Resort, MN',
+        sub: '~450 mi · ~7.5 hrs from Medora (or 2.5 from Detroit Lakes)',
+        lat: 47.5413, lng: -94.4773,
+        hookups: 'Family property', temp: '80°F / 56°F', tempClass: 'ok / cool',
+        note: 'Blackduck MN. Chippewa National Forest. No reservation needed. I-94 east all the way.'
+      }
+    ]
   },
+
+  // ── ROUTE C: Santa Fe + Enchanted Circle ─────────────────────
   {
-    id: 'craters', day: null, label: 'Optional — Craters of the Moon',
-    lat: 43.1718, lng: -113.4821,
-    title: 'Craters of the Moon NM',
-    sub: 'Optional 2-hr day stop',
-    drive: 'On route Park City → Cody',
-    temp: '80°F / 45°F',
-    hookups: 'No overnight — day stop',
-    note: 'Volcanic landscape. Dogs on roads only. Adds ~2 hrs to Day 3.',
-    color: '#854f0b', optional: true
-  },
-  {
-    id: 'cody', day: 3, label: 'Day 3 — Cody, WY',
-    lat: 44.5263, lng: -109.0565,
-    title: 'Cody, WY — Shoshone NF or Buffalo Bill SP',
-    sub: 'Aug 5 · Night 3',
-    drive: '~5.5 hrs direct / ~7.5 hrs via Craters',
-    temp: '88°F / 54°F',
-    hookups: 'Electric hookups available',
-    note: 'Buffalo Bill SP has electric sites. Book wyoparks.wyo.gov.',
-    color: '#2a6ebb', optional: false
-  },
-  {
-    id: 'devils', day: 4, label: 'Day 4 — Devils Tower NM',
-    lat: 44.5902, lng: -104.7146,
-    title: 'Devils Tower — Belle Fourche River CG',
-    sub: 'Aug 6 · Night 4',
-    drive: '~2.5 hrs from Cody',
-    temp: '88°F / 58°F',
-    hookups: 'No hookups — dry camping',
-    note: 'First-come, first-served. Arrive by noon. KOA nearby has hookups.',
-    color: '#2a6ebb', optional: false
-  },
-  {
-    id: 'rushmore', day: null, label: 'Day stop — Mt. Rushmore',
-    lat: 43.8803, lng: -103.4538,
-    title: 'Mt. Rushmore National Memorial',
-    sub: 'Day visit en route to Custer SP',
-    drive: '~1.5 hrs from Devils Tower',
-    temp: '82°F / 52°F',
-    hookups: 'Day visit only',
-    note: 'Main attraction for your friend. Then continue 30 min to Custer SP.',
-    color: '#888780', optional: false
-  },
-  {
-    id: 'custer', day: 5, label: 'Day 5 — Custer State Park',
-    lat: 43.7325, lng: -103.4133,
-    title: 'Custer State Park, SD',
-    sub: 'Aug 7 · Night 5',
-    drive: '~2 hrs from Devils Tower via Rushmore',
-    temp: '82°F / 52°F',
-    hookups: 'Electric hookups (30-amp)',
-    note: 'Chase cancellations at campsd.com. Consider 2 nights — Needles Hwy, Crazy Horse nearby.',
-    color: '#2a6ebb', optional: false
-  },
-  {
-    id: 'trnp', day: 6, label: 'Day 6 — TR NP South Unit',
-    lat: 46.9164, lng: -103.5258,
-    title: 'Theodore Roosevelt NP — Cottonwood CG',
-    sub: 'Aug 8 · Night 6',
-    drive: '~4 hrs from Custer SP',
-    temp: '86°F / 59°F',
-    hookups: 'No hookups — primitive',
-    note: 'Reserve odd-numbered sites on recreation.gov. Bison wander through camp. 36-mi scenic loop. TR Presidential Library now open.',
-    color: '#2a6ebb', optional: false
-  },
-  {
-    id: 'detroit', day: null, label: 'Optional — Detroit Lakes, MN',
-    lat: 46.8172, lng: -96.6836,
-    title: 'Detroit Lakes, MN',
-    sub: 'Optional overnight · ~5 hrs from Medora',
-    drive: '~5 hrs from Medora',
-    temp: '82°F / 59°F',
-    hookups: 'Full hookups available',
-    note: 'Splits final leg: 5 hrs + 2.5 hrs. Mile-long sandy beach. American Legion CG has full hookups.',
-    color: '#854f0b', optional: true
-  },
-  {
-    id: 'moose', day: 7, label: 'Day 7 — Moose Lake Resort',
-    lat: 47.5413, lng: -94.4773,
-    title: 'Stennes & Buhns Moose Lake Resort',
-    sub: 'Aug 9 · Destination',
-    drive: '~7.5 hrs from Medora (or 2.5 hrs from Detroit Lakes)',
-    temp: '80°F / 56°F',
-    hookups: 'Family property',
-    note: 'Blackduck, MN. Chippewa National Forest. No reservation needed.',
-    color: '#0f6e56', optional: false
+    id: 'C',
+    name: 'Route C — Santa Fe',
+    description: '10 days · Southwest corridor via Santa Fe & Taos',
+    toggles: [
+      { id: 'ojocaliente', label: 'Ojo Caliente overnight', defaultOn: true }
+    ],
+    stops: [
+      {
+        id: 'scottsdale', type: 'home', day: 1, date: 'Day 1',
+        title: "Scottsdale, AZ — Brother's Place",
+        sub: '~300 mi · ~5 hrs from San Diego',
+        lat: 33.4942, lng: -111.9261,
+        hookups: 'Home stop', temp: '104°F / 82°F', tempClass: 'hot / mid',
+        note: 'I-8 east through Yuma, then north on I-10. One night — family visit. Very hot in Aug but you\'re indoors.'
+      },
+      {
+        id: 'santafe', type: 'overnight', day: 2, date: 'Day 2',
+        title: 'Santa Fe, NM',
+        sub: '~390 mi · ~6.5 hrs via I-17/Flagstaff/I-40/I-25',
+        lat: 35.6870, lng: -105.9378,
+        hookups: 'Electric hookups', temp: '80°F / 52°F', tempClass: 'ok / cool',
+        note: 'Santa Fe Skies RV Park — panoramic views, full hookups, 7,200 ft. Stay 2–3 nights. Art, food, Meow Wolf, Georgia O\'Keeffe country nearby.'
+      },
+      {
+        id: 'ojocaliente', type: 'optional', toggleId: 'ojocaliente',
+        title: 'Ojo Caliente Mineral Springs — Optional Overnight',
+        sub: '~50 mi north of Santa Fe on US-285 · ~1 hr',
+        lat: 36.3132, lng: -106.0503,
+        hookups: 'Electric hookups', temp: '85°F / 57°F', tempClass: 'mid / cool',
+        note: 'Camp in cottonwood bosque, 20% discount on historic mineral springs soaking. Farm-to-table restaurant on site. Highly recommended detour before Taos.'
+      },
+      {
+        id: 'eaglenest', type: 'overnight', day: 6, date: 'Day 6',
+        title: 'Taos / Eagle Nest, NM — Enchanted Circle',
+        sub: '~70 mi from Santa Fe · ~3 hrs (via Taos)',
+        lat: 36.5573, lng: -105.2659,
+        hookups: 'Full hookups', temp: '77°F / 46°F', tempClass: 'ok / cool',
+        note: 'Drive through Taos (explore, lunch, Taos Pueblo), then Enchanted Circle Byway to Eagle Nest at 8,200 ft. Angel Fire RV Resort has 100+ full hookup sites. Perfect dog weather.'
+      },
+      {
+        id: 'pueblo', type: 'overnight', day: 7, date: 'Day 7',
+        title: 'Pueblo, CO',
+        sub: '~180 mi · ~3.5 hrs via Raton Pass',
+        lat: 38.2544, lng: -104.6091,
+        hookups: 'Electric hookups', temp: '92°F / 61°F', tempClass: 'mid / cool',
+        note: 'Dramatic Raton Pass entry into Colorado at 7,834 ft. Lake Pueblo State Park has electric sites on the reservoir. Good dog walking. Watch afternoon thunderstorms over the Rockies.'
+      },
+      {
+        id: 'dodgecity', type: 'overnight', day: 8, date: 'Day 8',
+        title: 'Dodge City, KS area',
+        sub: '~270 mi · ~5 hrs east on US-50',
+        lat: 37.7528, lng: -100.0171,
+        hookups: 'Full hookups (KOA)', temp: '96°F / 68°F', tempClass: 'hot / ok',
+        note: 'Functional overnight on the plains. Hot — hookups essential for AC. Dodge City KOA is reliable. Early start the next day. Flat but fast driving.'
+      },
+      {
+        id: 'siouxfalls', type: 'overnight', day: 9, date: 'Day 9',
+        title: 'Sioux Falls, SD area',
+        sub: '~340 mi · ~6 hrs north on US-183/US-14',
+        lat: 43.5446, lng: -96.7311,
+        hookups: 'Full hookups', temp: '86°F / 63°F', tempClass: 'mid / ok',
+        note: 'Good overnight options near Sioux Falls. Palisades State Park (30 min east) has quartzite canyon scenery and hookups. Last long driving day.'
+      },
+      {
+        id: 'moose-c', type: 'destination', day: 10, date: 'Day 10',
+        title: 'Stennes & Buhns Moose Lake Resort, MN',
+        sub: '~340 mi · ~5 hrs north on US-75/MN-71',
+        lat: 47.5413, lng: -94.4773,
+        hookups: 'Family property', temp: '80°F / 56°F', tempClass: 'ok / cool',
+        note: 'Blackduck MN. Chippewa National Forest. No reservation needed. Pleasant final drive through Minnesota lakes country.'
+      }
+    ]
   }
+
 ];
 
-let map, markers = {}, infoWindows = {}, directionsRenderers = [];
-let showCraters = true, showDetroit = false, showRoute = true;
+// ═══════════════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════════════
+
+const API_KEY = 'AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk';
+
+let map, autocomplete, placesService, directionsService;
+let markers = {}, infoWindows = {};
+let directionsRenderers = [];
+let showRoute = true;
+
+// Active state
+let activeRouteId = 'B';
+let toggleStates = {};   // { toggleId: bool }
+let customStops = {};    // { routeId: [stopObj, ...] } — user-added stops
+let removedStops = {};   // { routeId: Set(stopId) }
+
+// ═══════════════════════════════════════════════════════════════
+//  URL STATE
+// ═══════════════════════════════════════════════════════════════
+
+function encodeState() {
+  const state = {
+    r: activeRouteId,
+    t: toggleStates,
+    rm: {}
+  };
+  for (const [rid, set] of Object.entries(removedStops)) {
+    if (set.size > 0) state.rm[rid] = [...set];
+  }
+  if (Object.keys(customStops).some(k => customStops[k].length > 0)) {
+    state.cs = customStops;
+  }
+  return btoa(JSON.stringify(state));
+}
+
+function decodeState(hash) {
+  try {
+    const state = JSON.parse(atob(hash));
+    if (state.r) activeRouteId = state.r;
+    if (state.t) toggleStates = state.t;
+    if (state.rm) {
+      for (const [rid, arr] of Object.entries(state.rm)) {
+        removedStops[rid] = new Set(arr);
+      }
+    }
+    if (state.cs) customStops = state.cs;
+  } catch(e) {}
+}
+
+function updateShareUrl() {
+  const encoded = encodeState();
+  const url = `${location.origin}${location.pathname}#${encoded}`;
+  const el = document.getElementById('share-url');
+  if (el) el.value = url;
+}
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url').value;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.share-bar button');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy link', 1500);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
 
 function initMap() {
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 43.5, lng: -106 },
-    zoom: 5,
-    mapTypeId: 'terrain',
-    styles: [
-      { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }
-    ]
+  // Load state from URL hash
+  if (location.hash) decodeState(location.hash.slice(1));
+
+  // Init defaults for toggle states
+  ROUTES.forEach(route => {
+    route.toggles.forEach(t => {
+      const key = `${route.id}_${t.id}`;
+      if (toggleStates[key] === undefined) toggleStates[key] = t.defaultOn;
+    });
+    if (!customStops[route.id]) customStops[route.id] = [];
+    if (!removedStops[route.id]) removedStops[route.id] = new Set();
   });
 
-  stops.forEach((stop, i) => {
-    const isOptional = stop.optional;
-    const isHome = stop.id === 'parkcity';
-    const isDest = stop.id === 'moose';
-    const isRushmore = stop.id === 'rushmore';
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 40.5, lng: -103 },
+    zoom: 4,
+    mapTypeId: 'terrain',
+    styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] }]
+  });
 
-    let markerColor = stop.color;
-    let label = stop.day ? String(stop.day) : (isRushmore ? '★' : '?');
+  directionsService = new google.maps.DirectionsService();
+  placesService = new google.maps.places.PlacesService(map);
+
+  // Autocomplete
+  const input = document.getElementById('place-search');
+  autocomplete = new google.maps.places.Autocomplete(input, { fields: ['name', 'geometry'] });
+
+  // Click-to-add
+  map.addListener('click', e => {
+    if (e.placeId) {
+      e.stop();
+      addPlaceById(e.placeId);
+    }
+  });
+
+  buildRouteTabs();
+  renderAll();
+  updateShareUrl();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ROUTE TABS
+// ═══════════════════════════════════════════════════════════════
+
+function buildRouteTabs() {
+  const container = document.getElementById('route-tabs');
+  container.innerHTML = '';
+  ROUTES.forEach(route => {
+    const btn = document.createElement('button');
+    btn.className = 'route-tab' + (route.id === activeRouteId ? ' active' : '');
+    btn.textContent = route.name;
+    btn.onclick = () => switchRoute(route.id);
+    container.appendChild(btn);
+  });
+}
+
+function switchRoute(id) {
+  activeRouteId = id;
+  document.querySelectorAll('.route-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ROUTES[i].id === id);
+  });
+  renderAll();
+  updateShareUrl();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOGGLES
+// ═══════════════════════════════════════════════════════════════
+
+function buildToggles() {
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  const container = document.getElementById('toggle-container');
+  container.innerHTML = '';
+  route.toggles.forEach(t => {
+    const key = `${route.id}_${t.id}`;
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn' + (toggleStates[key] ? ' opt-active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => {
+      toggleStates[key] = !toggleStates[key];
+      btn.classList.toggle('opt-active', toggleStates[key]);
+      renderAll();
+      updateShareUrl();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function isToggleOn(toggleId) {
+  const key = `${activeRouteId}_${toggleId}`;
+  return !!toggleStates[key];
+}
+
+function toggleRoute(btn) {
+  showRoute = !showRoute;
+  btn.classList.toggle('active', showRoute);
+  drawRoute();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GET ACTIVE STOPS
+// ═══════════════════════════════════════════════════════════════
+
+function getActiveStops() {
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  const removed = removedStops[activeRouteId] || new Set();
+  const custom = customStops[activeRouteId] || [];
+
+  const base = route.stops.filter(s => {
+    if (removed.has(s.id)) return false;
+    if (s.type === 'optional') return isToggleOn(s.toggleId);
+    return true;
+  });
+
+  return [...base, ...custom];
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+
+function renderAll() {
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  document.getElementById('route-title').textContent = route.description;
+  buildToggles();
+  clearMarkers();
+  placeMarkers();
+  drawRoute();
+  buildSidebar();
+  updateShareUrl();
+}
+
+function clearMarkers() {
+  Object.values(markers).forEach(m => m.setMap(null));
+  Object.values(infoWindows).forEach(w => w.close());
+  markers = {};
+  infoWindows = {};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MARKERS
+// ═══════════════════════════════════════════════════════════════
+
+const TYPE_COLORS = {
+  overnight: '#2a6ebb',
+  home: '#534ab7',
+  dayvisit: '#888780',
+  optional: '#854f0b',
+  destination: '#0f6e56',
+  custom: '#d4537e'
+};
+
+function placeMarkers() {
+  const stops = getActiveStops();
+  let dayNum = 0;
+  stops.forEach(stop => {
+    const color = TYPE_COLORS[stop.type] || '#2a6ebb';
+    const isSmall = stop.type === 'optional' || stop.type === 'dayvisit';
+    if (stop.type === 'overnight' || stop.type === 'destination') dayNum++;
+    const label = stop.day ? String(stop.day)
+      : stop.type === 'dayvisit' ? '★'
+      : stop.type === 'optional' ? '○'
+      : stop.type === 'home' ? '⌂'
+      : '•';
 
     const marker = new google.maps.Marker({
       position: { lat: stop.lat, lng: stop.lng },
-      map: map,
+      map,
       title: stop.title,
-      label: {
-        text: label,
-        color: '#fff',
-        fontSize: '12px',
-        fontWeight: '600'
-      },
+      label: { text: label, color: '#fff', fontSize: isSmall ? '10px' : '12px', fontWeight: '600' },
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
-        scale: isOptional ? 10 : 14,
-        fillColor: markerColor,
-        fillOpacity: isOptional ? 0.7 : 1,
+        scale: isSmall ? 9 : 13,
+        fillColor: color,
+        fillOpacity: isSmall ? 0.75 : 1,
         strokeColor: '#fff',
         strokeWeight: 2
       },
-      zIndex: isOptional ? 1 : 10
+      zIndex: isSmall ? 1 : 10
     });
 
-    const contentString = `
-      <div class="info-window">
+    const iw = new google.maps.InfoWindow({
+      content: `<div class="iw">
         <h3>${stop.title}</h3>
-        <div class="iw-sub">${stop.sub}</div>
-        <div class="iw-row"><span class="iw-label">Drive</span><span class="iw-val">${stop.drive}</span></div>
-        <div class="iw-row"><span class="iw-label">Aug temps</span><span class="iw-val">${stop.temp}</span></div>
-        <div class="iw-row"><span class="iw-label">Hookups</span><span class="iw-val">${stop.hookups}</span></div>
-        <div class="iw-note">${stop.note}</div>
-      </div>`;
-
-    const iw = new google.maps.InfoWindow({ content: contentString });
+        <div class="iw-sub">${stop.sub || ''}</div>
+        <table>
+          ${stop.temp ? `<tr><td>Aug temps</td><td>${stop.temp}</td></tr>` : ''}
+          ${stop.hookups ? `<tr><td>Hookups</td><td>${stop.hookups}</td></tr>` : ''}
+        </table>
+        ${stop.note ? `<div class="iw-note">${stop.note}</div>` : ''}
+      </div>`
+    });
 
     marker.addListener('click', () => {
       Object.values(infoWindows).forEach(w => w.close());
@@ -392,134 +676,206 @@ function initMap() {
     markers[stop.id] = marker;
     infoWindows[stop.id] = iw;
   });
-
-  updateOptionalMarkers();
-  drawRoute();
 }
 
-function updateOptionalMarkers() {
-  if (markers['craters']) {
-    markers['craters'].setVisible(showCraters);
-    const card = document.getElementById('card-craters');
-    if (card) card.style.display = showCraters ? 'block' : 'none';
-  }
-  if (markers['detroit']) {
-    markers['detroit'].setVisible(showDetroit);
-    const card = document.getElementById('card-detroit');
-    if (card) card.style.display = showDetroit ? 'block' : 'none';
-  }
-}
+// ═══════════════════════════════════════════════════════════════
+//  DIRECTIONS / ROUTE LINE
+// ═══════════════════════════════════════════════════════════════
 
 function drawRoute() {
   directionsRenderers.forEach(r => r.setMap(null));
   directionsRenderers = [];
   if (!showRoute) return;
 
-  const service = new google.maps.DirectionsService();
+  const stops = getActiveStops().filter(s => s.lat && s.lng);
+  if (stops.length < 2) return;
 
-  const mainWaypoints = [
-    { lat: 37.6365, lng: -112.1669 }, // Bryce
-    { lat: 40.6461, lng: -111.498 },  // Park City
-    { lat: 44.5263, lng: -109.0565 }, // Cody
-    { lat: 44.5902, lng: -104.7146 }, // Devils Tower
-    { lat: 43.8803, lng: -103.4538 }, // Rushmore
-    { lat: 43.7325, lng: -103.4133 }, // Custer SP
-    { lat: 46.9164, lng: -103.5258 }, // TRNP
-  ];
+  // Split into segments to handle Google's 8-waypoint limit
+  const chunkSize = 8;
+  for (let i = 0; i < stops.length - 1; i += chunkSize - 1) {
+    const chunk = stops.slice(i, i + chunkSize);
+    if (chunk.length < 2) continue;
 
-  if (showCraters) {
-    mainWaypoints.splice(2, 0, { lat: 43.1718, lng: -113.4821 });
-  }
+    const origin = { lat: chunk[0].lat, lng: chunk[0].lng };
+    const destination = { lat: chunk[chunk.length - 1].lat, lng: chunk[chunk.length - 1].lng };
+    const waypoints = chunk.slice(1, -1).map(s => ({
+      location: { lat: s.lat, lng: s.lng },
+      stopover: true
+    }));
 
-  const finalDest = showDetroit
-    ? [{ lat: 46.8172, lng: -96.6836 }, { lat: 47.5413, lng: -94.4773 }]
-    : [{ lat: 47.5413, lng: -94.4773 }];
-
-  const allPoints = [
-    { lat: 32.7157, lng: -117.1611 }, // San Diego
-    ...mainWaypoints,
-    ...finalDest
-  ];
-
-  const color = '#2a6ebb';
-
-  for (let i = 0; i < allPoints.length - 1; i++) {
-    const origin = allPoints[i];
-    const destination = allPoints[i + 1];
-    const isOptionalSegment =
-      (showCraters && i === 2) ||
-      (showDetroit && i === allPoints.length - 2);
-
+    const isOptSegment = chunk.some(s => s.type === 'optional');
     const renderer = new google.maps.DirectionsRenderer({
       suppressMarkers: true,
       polylineOptions: {
-        strokeColor: isOptionalSegment ? '#854f0b' : color,
-        strokeOpacity: isOptionalSegment ? 0.6 : 0.75,
-        strokeWeight: isOptionalSegment ? 3 : 4
+        strokeColor: isOptSegment ? '#854f0b' : '#2a6ebb',
+        strokeOpacity: isOptSegment ? 0.55 : 0.7,
+        strokeWeight: isOptSegment ? 3 : 4
       }
     });
-
     renderer.setMap(map);
     directionsRenderers.push(renderer);
 
-    service.route({
-      origin: origin,
-      destination: destination,
-      travelMode: google.maps.TravelMode.DRIVING
-    }, (result, status) => {
-      if (status === 'OK') renderer.setDirections(result);
-    });
+    directionsService.route({ origin, destination, waypoints, travelMode: 'DRIVING' },
+      (result, status) => { if (status === 'OK') renderer.setDirections(result); }
+    );
   }
 }
 
-function toggleOptional(type, btn) {
-  if (type === 'craters') {
-    showCraters = !showCraters;
-    btn.classList.toggle('opt-active', showCraters);
-    btn.classList.toggle('active', false);
-  } else if (type === 'detroit') {
-    showDetroit = !showDetroit;
-    btn.classList.toggle('opt-active', showDetroit);
-    btn.classList.toggle('active', false);
-  }
-  updateOptionalMarkers();
-  drawRoute();
+// ═══════════════════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+function buildSidebar() {
+  const list = document.getElementById('stops-list');
+  list.innerHTML = '';
+
+  const stops = getActiveStops();
+  const removed = removedStops[activeRouteId] || new Set();
+
+  stops.forEach(stop => {
+    const card = document.createElement('div');
+    card.className = `day-card type-${stop.type}`;
+    card.id = `card-${stop.id}`;
+    card.onclick = () => focusStop(stop);
+
+    const hookupBadge = stop.hookups
+      ? `<span class="badge ${hookupBadgeClass(stop.hookups)}">${stop.hookups}</span>`
+      : '';
+
+    const tempHtml = stop.temp
+      ? `<div class="temp">Aug avg: ${formatTemp(stop.temp)}</div>` : '';
+
+    const isRemovable = stop.type === 'custom' ||
+      (stop.type !== 'destination');
+
+    card.innerHTML = `
+      <div class="day-label">${stop.day ? `Day ${stop.day}${stop.date ? ' · ' + stop.date : ''}` : stop.type === 'optional' ? 'Optional stop' : stop.type === 'dayvisit' ? 'Day visit' : ''}</div>
+      <div class="day-title">${stop.title}</div>
+      <div class="day-sub">${stop.sub || ''}</div>
+      <div class="day-meta">${hookupBadge}</div>
+      ${tempHtml}
+      ${stop.note ? `<div class="day-note">${stop.note}</div>` : ''}
+      ${isRemovable ? `<button class="remove-btn" onclick="removeStop(event,'${stop.id}')" title="Remove stop">×</button>` : ''}
+    `;
+    list.appendChild(card);
+  });
 }
 
-function toggleRoute(btn) {
-  showRoute = !showRoute;
-  btn.classList.toggle('active', showRoute);
-  drawRoute();
+function hookupBadgeClass(hookups) {
+  if (!hookups) return 'bg-gray';
+  const h = hookups.toLowerCase();
+  if (h.includes('electric') || h.includes('full') || h.includes('hookup')) return 'bg-green';
+  if (h.includes('no hookup') || h.includes('primitive') || h.includes('no overnight')) return 'bg-gray';
+  if (h.includes('limited')) return 'bg-amber';
+  if (h.includes('home') || h.includes('family') || h.includes('owned')) return 'bg-teal';
+  if (h.includes('day visit')) return 'bg-gray';
+  return 'bg-blue';
 }
 
-function focusStop(idOrIndex) {
-  const stop = typeof idOrIndex === 'number'
-    ? stops.filter(s => !s.optional)[idOrIndex]
-    : stops.find(s => s.id === idOrIndex);
-  if (!stop || !markers[stop.id]) return;
+function formatTemp(temp) {
+  if (!temp) return '';
+  const parts = temp.split('/').map(s => s.trim());
+  const hi = parts[0], lo = parts[1] || '';
+  const hiNum = parseInt(hi);
+  const hiClass = hiNum >= 95 ? 'hot' : hiNum >= 85 ? 'mid' : 'ok';
+  return `<span class="${hiClass}">${hi}</span> / <span class="cool">${lo}</span>`;
+}
 
+// ═══════════════════════════════════════════════════════════════
+//  STOP INTERACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function focusStop(stop) {
+  if (!stop.lat || !stop.lng) return;
   map.panTo({ lat: stop.lat, lng: stop.lng });
   map.setZoom(9);
   Object.values(infoWindows).forEach(w => w.close());
-  infoWindows[stop.id].open(map, markers[stop.id]);
+  if (infoWindows[stop.id]) infoWindows[stop.id].open(map, markers[stop.id]);
   highlightCard(stop.id);
 }
 
 function highlightCard(id) {
   document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
-  const card = document.getElementById('card-' + id) ||
-    document.getElementById('card-' + stops.findIndex(s => s.id === id));
+  const card = document.getElementById(`card-${id}`);
   if (card) {
     card.classList.add('active');
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
+function removeStop(e, stopId) {
+  e.stopPropagation();
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  const isDefault = route.stops.some(s => s.id === stopId);
+  if (isDefault) {
+    removedStops[activeRouteId] = removedStops[activeRouteId] || new Set();
+    removedStops[activeRouteId].add(stopId);
+  } else {
+    customStops[activeRouteId] = (customStops[activeRouteId] || []).filter(s => s.id !== stopId);
+  }
+  renderAll();
+}
+
+function resetRoute() {
+  removedStops[activeRouteId] = new Set();
+  customStops[activeRouteId] = [];
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  route.toggles.forEach(t => {
+    toggleStates[`${activeRouteId}_${t.id}`] = t.defaultOn;
+  });
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADD WAYPOINTS
+// ═══════════════════════════════════════════════════════════════
+
+function addSearchedPlace() {
+  const place = autocomplete.getPlace();
+  if (!place || !place.geometry) {
+    alert('Please select a place from the dropdown suggestions.');
+    return;
+  }
+  addCustomStop(place.name, place.geometry.location.lat(), place.geometry.location.lng());
+  document.getElementById('place-search').value = '';
+}
+
+function addPlaceById(placeId) {
+  placesService.getDetails({ placeId, fields: ['name', 'geometry'] }, (place, status) => {
+    if (status === 'OK' && place.geometry) {
+      addCustomStop(place.name, place.geometry.location.lat(), place.geometry.location.lng());
+    }
+  });
+}
+
+function addCustomStop(name, lat, lng) {
+  const id = 'custom_' + Date.now();
+  const stop = {
+    id, type: 'custom', lat, lng,
+    title: name,
+    sub: 'Custom waypoint — click × to remove',
+    note: 'Added manually. Drag marker or remove and re-add to reposition.'
+  };
+  customStops[activeRouteId] = customStops[activeRouteId] || [];
+  customStops[activeRouteId].push(stop);
+  renderAll();
+
+  // Pan to new stop
+  map.panTo({ lat, lng });
+  map.setZoom(9);
+}
+
 window.initMap = initMap;
+window.switchRoute = switchRoute;
+window.toggleRoute = toggleRoute;
+window.removeStop = removeStop;
+window.resetRoute = resetRoute;
+window.addSearchedPlace = addSearchedPlace;
+window.copyShareUrl = copyShareUrl;
 </script>
 
 <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk&callback=initMap&libraries=places">
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk&libraries=places&callback=initMap">
 </script>
 
 </body>
