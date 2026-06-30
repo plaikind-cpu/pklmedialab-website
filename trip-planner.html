@@ -23,10 +23,13 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
 .toggle-btn.active { background: #1a1a18; color: #fff; border-color: #1a1a18; }
 .toggle-btn.opt-active { background: #854f0b; color: #fff; border-color: #854f0b; }
 .divider { width: 1px; background: #e0dfd8; height: 24px; flex-shrink: 0; }
-.search-wrap { display: flex; gap: 6px; align-items: center; }
+.search-wrap { display: flex; gap: 6px; align-items: center; position: relative; }
 #place-search { font-size: 12px; padding: 4px 8px; border: 1px solid #d0cfc8; border-radius: 4px; width: 180px; }
 #add-stop-btn { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1.5px solid #2a6ebb; background: #fff; color: #2a6ebb; cursor: pointer; }
 #add-stop-btn:hover { background: #2a6ebb; color: #fff; }
+
+/* Google Places autocomplete dropdown must render above everything else */
+.pac-container { z-index: 10000 !important; }
 
 /* ── Main layout ── */
 .main { display: flex; flex: 1; min-height: 0; }
@@ -743,7 +746,13 @@ function drawRoute() {
     directionsRenderers.push(renderer);
 
     directionsService.route({ origin, destination, waypoints, travelMode: 'DRIVING' },
-      (result, status) => { if (status === 'OK') renderer.setDirections(result); }
+      (result, status) => {
+        if (status === 'OK') {
+          renderer.setDirections(result);
+        } else {
+          console.error('Directions request failed:', status, { origin, destination, waypoints });
+        }
+      }
     );
   }
 }
