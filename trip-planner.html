@@ -58,6 +58,14 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
 .drag-handle:active { cursor: grabbing; }
 .loading-stop { opacity: 0.55; }
 .loading-stop .day-note::after { content: " ⏳ fetching trip data…"; color: #888; }
+
+/* ── Excluded stops ── */
+.excluded-section { border-top: 2px solid #e0dfd8; }
+.excluded-header { background: #f5f4f0; padding: 8px 14px; font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e0dfd8; }
+.excluded-card { padding: 9px 14px; border-bottom: 1px solid #ece9e3; display: flex; justify-content: space-between; align-items: center; gap: 8px; opacity: 0.7; }
+.excluded-card-title { font-size: 12px; color: #555; }
+.restore-btn { font-size: 10px; padding: 3px 9px; border-radius: 4px; border: 1px solid #2a6ebb; background: #fff; color: #2a6ebb; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.restore-btn:hover { background: #2a6ebb; color: #fff; }
 .day-label { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.04em; }
 .day-title { font-size: 13px; font-weight: 600; margin: 2px 0; color: #1a1a18; padding-right: 20px; }
 .day-sub { font-size: 11px; color: #777; }
@@ -135,6 +143,7 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
       <span onclick="resetRoute()" title="Reset to default stops">Reset</span>
     </div>
     <div class="stops-list" id="stops-list"></div>
+    <div id="excluded-section"></div>
     <div class="share-bar">
       <input type="text" id="share-url" readonly placeholder="Share URL appears here…" onclick="this.select()" />
       <button onclick="copyShareUrl()">Copy link</button>
@@ -431,18 +440,21 @@ let toggleStates = {};   // { toggleId: bool }
 let customStops = {};    // { routeId: [stopObj, ...] } — user-added stops
 let removedStops = {};   // { routeId: Set(stopId) }
 let stopOrder = {};      // { routeId: [stopId, stopId, ...] } — custom ordering
+let excludedCustom = {}; // { routeId: [stopObj, ...] } — removed custom stops, kept for restore
 let draggedStopId = null;
 
 // ═══════════════════════════════════════════════════════════════
 //  URL STATE
 // ═══════════════════════════════════════════════════════════════
 
-function encodeState() {
-  const state = {
-    r: activeRouteId,
-    t: toggleStates,
-    rm: {}
-  };
+// ═══════════════════════════════════════════════════════════════
+//  STATE PERSISTENCE — URL (for sharing) + localStorage (for reload)
+// ═══════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'pkl_trip_planner_state_v1';
+
+function buildStateObject() {
+  const state = { r: activeRouteId, t: toggleStates, rm: {} };
   for (const [rid, set] of Object.entries(removedStops)) {
     if (set.size > 0) state.rm[rid] = [...set];
   }
@@ -452,22 +464,48 @@ function encodeState() {
   if (Object.keys(stopOrder).some(k => stopOrder[k] && stopOrder[k].length > 0)) {
     state.so = stopOrder;
   }
-  return btoa(JSON.stringify(state));
+  if (Object.keys(excludedCustom).some(k => excludedCustom[k] && excludedCustom[k].length > 0)) {
+    state.ec = excludedCustom;
+  }
+  return state;
+}
+
+function encodeState() {
+  return btoa(JSON.stringify(buildStateObject()));
+}
+
+function applyState(state) {
+  if (!state) return;
+  if (state.r) activeRouteId = state.r;
+  if (state.t) toggleStates = state.t;
+  if (state.rm) {
+    for (const [rid, arr] of Object.entries(state.rm)) {
+      removedStops[rid] = new Set(arr);
+    }
+  }
+  if (state.cs) customStops = state.cs;
+  if (state.so) stopOrder = state.so;
+  if (state.ec) excludedCustom = state.ec;
 }
 
 function decodeState(hash) {
   try {
-    const state = JSON.parse(atob(hash));
-    if (state.r) activeRouteId = state.r;
-    if (state.t) toggleStates = state.t;
-    if (state.rm) {
-      for (const [rid, arr] of Object.entries(state.rm)) {
-        removedStops[rid] = new Set(arr);
-      }
-    }
-    if (state.cs) customStops = state.cs;
-    if (state.so) stopOrder = state.so;
+    applyState(JSON.parse(atob(hash)));
   } catch(e) {}
+}
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildStateObject()));
+  } catch(e) {}
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) applyState(JSON.parse(raw));
+    return !!raw;
+  } catch(e) { return false; }
 }
 
 function updateShareUrl() {
@@ -475,6 +513,7 @@ function updateShareUrl() {
   const url = `${location.origin}${location.pathname}#${encoded}`;
   const el = document.getElementById('share-url');
   if (el) el.value = url;
+  saveToLocalStorage();
 }
 
 function copyShareUrl() {
@@ -491,8 +530,12 @@ function copyShareUrl() {
 // ═══════════════════════════════════════════════════════════════
 
 function initMap() {
-  // Load state from URL hash
-  if (location.hash) decodeState(location.hash.slice(1));
+  // URL hash takes priority (for shared links); otherwise restore last local session
+  if (location.hash) {
+    decodeState(location.hash.slice(1));
+  } else {
+    loadFromLocalStorage();
+  }
 
   // Init defaults for toggle states
   ROUTES.forEach(route => {
@@ -502,6 +545,7 @@ function initMap() {
     });
     if (!customStops[route.id]) customStops[route.id] = [];
     if (!removedStops[route.id]) removedStops[route.id] = new Set();
+    if (!excludedCustom[route.id]) excludedCustom[route.id] = [];
   });
 
   map = new google.maps.Map(document.getElementById('map'), {
@@ -784,6 +828,7 @@ function buildSidebar() {
     card.addEventListener('dragend', () => {
       card.classList.remove('dragging');
       document.querySelectorAll('.day-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
+      stopAutoScroll();
     });
     card.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -792,6 +837,7 @@ function buildSidebar() {
       const isTopHalf = (e.clientY - rect.top) < rect.height / 2;
       card.classList.toggle('drag-over-top', isTopHalf);
       card.classList.toggle('drag-over-bottom', !isTopHalf);
+      autoScrollList(e.clientY);
     });
     card.addEventListener('dragleave', () => {
       card.classList.remove('drag-over-top', 'drag-over-bottom');
@@ -826,6 +872,29 @@ function buildSidebar() {
     `;
     list.appendChild(card);
   });
+
+  buildExcludedSection();
+}
+
+function buildExcludedSection() {
+  const container = document.getElementById('excluded-section');
+  const excluded = getExcludedStops();
+  if (!excluded.length) {
+    container.innerHTML = '';
+    return;
+  }
+  const cards = excluded.map(stop => `
+    <div class="excluded-card">
+      <span class="excluded-card-title">${stop.title}</span>
+      <button class="restore-btn" onclick="restoreStop('${stop.id}')">Restore</button>
+    </div>
+  `).join('');
+  container.innerHTML = `
+    <div class="excluded-section">
+      <div class="excluded-header">Excluded stops (${excluded.length})</div>
+      ${cards}
+    </div>
+  `;
 }
 
 function reorderStop(draggedId, targetId, insertBefore) {
@@ -839,6 +908,33 @@ function reorderStop(draggedId, targetId, insertBefore) {
   ids.splice(toIdx, 0, draggedId);
   stopOrder[activeRouteId] = ids;
   renderAll();
+}
+
+// Auto-scroll the stops list when dragging near its top/bottom edge
+let autoScrollInterval = null;
+function autoScrollList(clientY) {
+  const list = document.getElementById('stops-list');
+  if (!list) return;
+  const rect = list.getBoundingClientRect();
+  const edgeZone = 50;
+  const distFromTop = clientY - rect.top;
+  const distFromBottom = rect.bottom - clientY;
+
+  stopAutoScroll();
+
+  if (distFromTop < edgeZone && distFromTop > -100) {
+    const speed = Math.max(2, (edgeZone - distFromTop) / 3);
+    autoScrollInterval = setInterval(() => { list.scrollTop -= speed; }, 16);
+  } else if (distFromBottom < edgeZone && distFromBottom > -100) {
+    const speed = Math.max(2, (edgeZone - distFromBottom) / 3);
+    autoScrollInterval = setInterval(() => { list.scrollTop += speed; }, 16);
+  }
+}
+function stopAutoScroll() {
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+  }
 }
 
 function hookupBadgeClass(hookups) {
@@ -891,7 +987,13 @@ function removeStop(e, stopId) {
     removedStops[activeRouteId] = removedStops[activeRouteId] || new Set();
     removedStops[activeRouteId].add(stopId);
   } else {
-    customStops[activeRouteId] = (customStops[activeRouteId] || []).filter(s => s.id !== stopId);
+    const list = customStops[activeRouteId] || [];
+    const stop = list.find(s => s.id === stopId);
+    customStops[activeRouteId] = list.filter(s => s.id !== stopId);
+    if (stop) {
+      excludedCustom[activeRouteId] = excludedCustom[activeRouteId] || [];
+      excludedCustom[activeRouteId].push(stop);
+    }
   }
   if (stopOrder[activeRouteId]) {
     stopOrder[activeRouteId] = stopOrder[activeRouteId].filter(id => id !== stopId);
@@ -899,9 +1001,35 @@ function removeStop(e, stopId) {
   renderAll();
 }
 
+function restoreStop(stopId) {
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  const isDefault = route.stops.some(s => s.id === stopId);
+  if (isDefault) {
+    if (removedStops[activeRouteId]) removedStops[activeRouteId].delete(stopId);
+  } else {
+    const list = excludedCustom[activeRouteId] || [];
+    const stop = list.find(s => s.id === stopId);
+    excludedCustom[activeRouteId] = list.filter(s => s.id !== stopId);
+    if (stop) {
+      customStops[activeRouteId] = customStops[activeRouteId] || [];
+      customStops[activeRouteId].push(stop);
+    }
+  }
+  renderAll();
+}
+
+function getExcludedStops() {
+  const route = ROUTES.find(r => r.id === activeRouteId);
+  const removed = removedStops[activeRouteId] || new Set();
+  const excludedDefaults = route.stops.filter(s => removed.has(s.id) && s.type !== 'optional');
+  const excludedCustomList = excludedCustom[activeRouteId] || [];
+  return [...excludedDefaults, ...excludedCustomList];
+}
+
 function resetRoute() {
   removedStops[activeRouteId] = new Set();
   customStops[activeRouteId] = [];
+  excludedCustom[activeRouteId] = [];
   stopOrder[activeRouteId] = [];
   const route = ROUTES.find(r => r.id === activeRouteId);
   route.toggles.forEach(t => {
@@ -960,9 +1088,9 @@ function populateStopData(stop) {
   const idx = stops.findIndex(s => s.id === stop.id);
   const prevStop = idx > 0 ? stops[idx - 1] : null;
 
-  const tasks = [fetchAugustTemp(stop.lat, stop.lng)];
+  const tasks = [withTimeout(fetchAugustTemp(stop.lat, stop.lng), 8000)];
   if (prevStop && prevStop.lat && prevStop.lng) {
-    tasks.push(fetchDriveInfo(prevStop, stop));
+    tasks.push(withTimeout(fetchDriveInfo(prevStop, stop), 8000));
   } else {
     tasks.push(Promise.resolve(null));
   }
@@ -1006,9 +1134,16 @@ function fetchDriveInfo(fromStop, toStop) {
   });
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(null), ms))
+  ]);
+}
+
 function fetchAugustTemp(lat, lng) {
-  // Open-Meteo climate normals API — free, no key required
-  const url = `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lng}&start_date=2010-08-01&end_date=2020-08-31&models=EC_Earth3P_HR&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit`;
+  // Open-Meteo historical archive — single recent August, much faster than multi-year climate normals
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=2025-08-01&end_date=2025-08-31&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`;
   return fetch(url)
     .then(r => r.ok ? r.json() : null)
     .then(data => {
@@ -1026,6 +1161,7 @@ window.initMap = initMap;
 window.switchRoute = switchRoute;
 window.toggleRoute = toggleRoute;
 window.removeStop = removeStop;
+window.restoreStop = restoreStop;
 window.resetRoute = resetRoute;
 window.addSearchedPlace = addSearchedPlace;
 window.copyShareUrl = copyShareUrl;
