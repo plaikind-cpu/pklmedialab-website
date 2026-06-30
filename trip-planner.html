@@ -98,6 +98,12 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
 .share-bar button { font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 1.5px solid #2a6ebb; background: #fff; color: #2a6ebb; cursor: pointer; white-space: nowrap; }
 .share-bar button:hover { background: #2a6ebb; color: #fff; }
 
+.save-bar { border-top: 1px solid #e0dfd8; padding: 8px 12px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; background: #fafaf8; }
+.save-bar button { font-size: 11px; padding: 5px 12px; border-radius: 4px; border: 1.5px solid #0f6e56; background: #0f6e56; color: #fff; cursor: pointer; white-space: nowrap; font-weight: 500; }
+.save-bar button:hover { background: #0c5a46; }
+#save-status { font-size: 11px; color: #888; }
+#save-status.saved { color: #3b6d11; }
+
 /* ── Info window ── */
 .iw { max-width: 240px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 .iw h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
@@ -144,6 +150,10 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
     </div>
     <div class="stops-list" id="stops-list"></div>
     <div id="excluded-section"></div>
+    <div class="save-bar">
+      <button id="save-btn" onclick="manualSave()">Save changes</button>
+      <span id="save-status"></span>
+    </div>
     <div class="share-bar">
       <input type="text" id="share-url" readonly placeholder="Share URL appears here…" onclick="this.select()" />
       <button onclick="copyShareUrl()">Copy link</button>
@@ -497,7 +507,25 @@ function decodeState(hash) {
 function saveToLocalStorage() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(buildStateObject()));
-  } catch(e) {}
+    showSaveStatus('Auto-saved', false);
+  } catch(e) {
+    showSaveStatus('Save failed — storage unavailable', true);
+  }
+}
+
+function manualSave() {
+  saveToLocalStorage();
+  showSaveStatus('Saved ✓', false, true);
+}
+
+function showSaveStatus(text, isError, emphasize) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('saved', !isError);
+  if (emphasize) {
+    setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 2500);
+  }
 }
 
 function loadFromLocalStorage() {
@@ -530,11 +558,17 @@ function copyShareUrl() {
 // ═══════════════════════════════════════════════════════════════
 
 function initMap() {
-  // URL hash takes priority (for shared links); otherwise restore last local session
-  if (location.hash) {
+  // If this browser already has saved local state, trust it — that's the freshest
+  // record of what the user was working on. Only fall back to a URL hash (a shared
+  // link) when there's no local state to restore. Either way, strip the hash from
+  // the address bar immediately afterward so it can never silently override a
+  // future autosave on this same tab.
+  const hadLocalState = loadFromLocalStorage();
+  if (!hadLocalState && location.hash) {
     decodeState(location.hash.slice(1));
-  } else {
-    loadFromLocalStorage();
+  }
+  if (location.hash) {
+    history.replaceState(null, '', location.pathname);
   }
 
   // Init defaults for toggle states
@@ -1081,6 +1115,16 @@ function addCustomStop(name, lat, lng) {
 
   // Populate real data in the background, same fields as built-in stops
   populateStopData(stop);
+
+  // Hard safety net: if nothing resolved within 10s for any reason, clear loading state
+  setTimeout(() => {
+    const list = customStops[activeRouteId] || [];
+    const still = list.find(s => s.id === stop.id);
+    if (still && still.loading) {
+      console.warn('[waypoint] safety-net timeout fired for', still.title);
+      applyStopUpdate(stop.id, null, null, null);
+    }
+  }, 10000);
 }
 
 function populateStopData(stop) {
@@ -1088,33 +1132,46 @@ function populateStopData(stop) {
   const idx = stops.findIndex(s => s.id === stop.id);
   const prevStop = idx > 0 ? stops[idx - 1] : null;
 
-  const tasks = [withTimeout(fetchAugustTemp(stop.lat, stop.lng), 8000)];
+  console.log('[waypoint] fetching data for', stop.title, stop.lat, stop.lng);
+
+  const tasks = [withTimeout(fetchAugustTemp(stop.lat, stop.lng), 6000)];
   if (prevStop && prevStop.lat && prevStop.lng) {
-    tasks.push(withTimeout(fetchDriveInfo(prevStop, stop), 8000));
+    tasks.push(withTimeout(fetchDriveInfo(prevStop, stop), 6000));
   } else {
     tasks.push(Promise.resolve(null));
   }
 
   Promise.all(tasks).then(([temp, driveInfo]) => {
-    if (temp) {
-      stop.temp = `${temp.high}°F / ${temp.low}°F`;
-    }
-    if (driveInfo) {
-      stop.sub = `${driveInfo.distance} · ${driveInfo.duration} from ${prevStop.title.split(',')[0].split('—')[0].trim()}`;
-    } else {
-      stop.sub = 'Custom waypoint';
-    }
-    stop.note = 'Added manually. Hookup and campground info not available automatically — edit notes once you research the site, or drag to reorder.';
-    stop.hookups = 'Unknown — verify locally';
-    stop.loading = false;
-    renderAll();
-  }).catch(() => {
-    stop.sub = 'Custom waypoint';
-    stop.note = 'Added manually. Could not auto-fetch trip data — check your connection.';
-    stop.hookups = 'Unknown';
-    stop.loading = false;
-    renderAll();
+    console.log('[waypoint] resolved', stop.title, { temp, driveInfo });
+    applyStopUpdate(stop.id, temp, driveInfo, prevStop);
+  }).catch((err) => {
+    console.error('[waypoint] populate failed', stop.title, err);
+    applyStopUpdate(stop.id, null, null, prevStop);
   });
+}
+
+function applyStopUpdate(stopId, temp, driveInfo, prevStop) {
+  // Find the actual array + index holding this stop and replace it in place,
+  // rather than relying on a possibly-stale object reference.
+  const list = customStops[activeRouteId] || [];
+  const arrIdx = list.findIndex(s => s.id === stopId);
+  if (arrIdx === -1) {
+    console.warn('[waypoint] stop no longer in customStops, skipping update', stopId);
+    return;
+  }
+  const updated = { ...list[arrIdx] };
+  updated.temp = temp ? `${temp.high}°F / ${temp.low}°F` : 'Unavailable';
+  updated.sub = driveInfo
+    ? `${driveInfo.distance} · ${driveInfo.duration} from ${(prevStop ? prevStop.title : '').split(',')[0].split('—')[0].trim()}`
+    : 'Custom waypoint';
+  updated.note = (temp || driveInfo)
+    ? 'Added manually. Hookup and campground info not available automatically — edit notes once you research the site, or drag to reorder.'
+    : 'Added manually. Could not auto-fetch drive time or temperature — check your connection, or this may be outside Open-Meteo/Directions coverage.';
+  updated.hookups = 'Unknown — verify locally';
+  updated.loading = false;
+  list[arrIdx] = updated;
+  customStops[activeRouteId] = list;
+  renderAll();
 }
 
 function fetchDriveInfo(fromStop, toStop) {
@@ -1165,6 +1222,7 @@ window.restoreStop = restoreStop;
 window.resetRoute = resetRoute;
 window.addSearchedPlace = addSearchedPlace;
 window.copyShareUrl = copyShareUrl;
+window.manualSave = manualSave;
 </script>
 
 <script async defer
