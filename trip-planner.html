@@ -1114,40 +1114,54 @@ function addCustomStop(name, lat, lng) {
   map.setZoom(9);
 
   // Populate real data in the background, same fields as built-in stops
-  populateStopData(stop);
+  try {
+    populateStopData(stop);
+  } catch (err) {
+    console.error('[waypoint] populateStopData call itself threw', err);
+    applyStopUpdate(stop.id, null, null, null);
+  }
 
   // Hard safety net: if nothing resolved within 10s for any reason, clear loading state
   setTimeout(() => {
-    const list = customStops[activeRouteId] || [];
-    const still = list.find(s => s.id === stop.id);
-    if (still && still.loading) {
-      console.warn('[waypoint] safety-net timeout fired for', still.title);
-      applyStopUpdate(stop.id, null, null, null);
+    try {
+      const list = customStops[activeRouteId] || [];
+      const still = list.find(s => s.id === stop.id);
+      if (still && still.loading) {
+        console.warn('[waypoint] safety-net timeout fired for', still.title);
+        applyStopUpdate(stop.id, null, null, null);
+      }
+    } catch (err) {
+      console.error('[waypoint] safety-net itself threw', err);
     }
   }, 10000);
 }
 
 function populateStopData(stop) {
-  const stops = getActiveStops();
-  const idx = stops.findIndex(s => s.id === stop.id);
-  const prevStop = idx > 0 ? stops[idx - 1] : null;
+  try {
+    const stops = getActiveStops();
+    const idx = stops.findIndex(s => s.id === stop.id);
+    const prevStop = idx > 0 ? stops[idx - 1] : null;
 
-  console.log('[waypoint] fetching data for', stop.title, stop.lat, stop.lng);
+    console.log('[waypoint] fetching data for', stop.title, stop.lat, stop.lng);
 
-  const tasks = [withTimeout(fetchAugustTemp(stop.lat, stop.lng), 6000)];
-  if (prevStop && prevStop.lat && prevStop.lng) {
-    tasks.push(withTimeout(fetchDriveInfo(prevStop, stop), 6000));
-  } else {
-    tasks.push(Promise.resolve(null));
+    const tasks = [withTimeout(fetchAugustTemp(stop.lat, stop.lng), 6000)];
+    if (prevStop && prevStop.lat && prevStop.lng && typeof directionsService !== 'undefined' && directionsService) {
+      tasks.push(withTimeout(fetchDriveInfo(prevStop, stop), 6000));
+    } else {
+      tasks.push(Promise.resolve(null));
+    }
+
+    Promise.all(tasks).then(([temp, driveInfo]) => {
+      console.log('[waypoint] resolved', stop.title, { temp, driveInfo });
+      applyStopUpdate(stop.id, temp, driveInfo, prevStop);
+    }).catch((err) => {
+      console.error('[waypoint] populate failed (promise.all rejected)', stop.title, err);
+      applyStopUpdate(stop.id, null, null, prevStop);
+    });
+  } catch (err) {
+    console.error('[waypoint] populateStopData threw synchronously', stop.title, err);
+    applyStopUpdate(stop.id, null, null, null);
   }
-
-  Promise.all(tasks).then(([temp, driveInfo]) => {
-    console.log('[waypoint] resolved', stop.title, { temp, driveInfo });
-    applyStopUpdate(stop.id, temp, driveInfo, prevStop);
-  }).catch((err) => {
-    console.error('[waypoint] populate failed', stop.title, err);
-    applyStopUpdate(stop.id, null, null, prevStop);
-  });
 }
 
 function applyStopUpdate(stopId, temp, driveInfo, prevStop) {
@@ -1176,42 +1190,55 @@ function applyStopUpdate(stopId, temp, driveInfo, prevStop) {
 
 function fetchDriveInfo(fromStop, toStop) {
   return new Promise((resolve) => {
-    directionsService.route({
-      origin: { lat: fromStop.lat, lng: fromStop.lng },
-      destination: { lat: toStop.lat, lng: toStop.lng },
-      travelMode: 'DRIVING'
-    }, (result, status) => {
-      if (status === 'OK' && result.routes[0]) {
-        const leg = result.routes[0].legs[0];
-        resolve({ distance: leg.distance.text, duration: leg.duration.text });
-      } else {
-        resolve(null);
-      }
-    });
+    try {
+      directionsService.route({
+        origin: { lat: fromStop.lat, lng: fromStop.lng },
+        destination: { lat: toStop.lat, lng: toStop.lng },
+        travelMode: 'DRIVING'
+      }, (result, status) => {
+        if (status === 'OK' && result.routes[0]) {
+          const leg = result.routes[0].legs[0];
+          resolve({ distance: leg.distance.text, duration: leg.duration.text });
+        } else {
+          console.warn('[waypoint] directions status:', status);
+          resolve(null);
+        }
+      });
+    } catch (err) {
+      console.error('[waypoint] fetchDriveInfo threw synchronously', err);
+      resolve(null);
+    }
   });
 }
 
 function withTimeout(promise, ms) {
   return Promise.race([
-    promise,
+    Promise.resolve(promise).catch(err => { console.error('[waypoint] promise rejected', err); return null; }),
     new Promise(resolve => setTimeout(() => resolve(null), ms))
   ]);
 }
 
 function fetchAugustTemp(lat, lng) {
-  // Open-Meteo historical archive — single recent August, much faster than multi-year climate normals
-  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=2025-08-01&end_date=2025-08-31&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`;
-  return fetch(url)
-    .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (!data || !data.daily || !data.daily.temperature_2m_max) return null;
-      const highs = data.daily.temperature_2m_max.filter(v => v != null);
-      const lows = data.daily.temperature_2m_min.filter(v => v != null);
-      if (!highs.length || !lows.length) return null;
-      const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
-      return { high: avg(highs), low: avg(lows) };
-    })
-    .catch(() => null);
+  try {
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=2025-08-01&end_date=2025-08-31&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto`;
+    return fetch(url)
+      .then(r => {
+        if (!r.ok) { console.warn('[waypoint] open-meteo HTTP', r.status); return null; }
+        return r.json();
+      })
+      .then(data => {
+        if (!data || !data.daily || !data.daily.temperature_2m_max) return null;
+        const highs = data.daily.temperature_2m_max.filter(v => v != null);
+        const lows = data.daily.temperature_2m_min.filter(v => v != null);
+        if (!highs.length || !lows.length) return null;
+        const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+        return { high: avg(highs), low: avg(lows) };
+      })
+      .catch(err => { console.error('[waypoint] fetchAugustTemp fetch failed', err); return null; });
+  } catch (err) {
+    console.error('[waypoint] fetchAugustTemp threw synchronously', err);
+    return Promise.resolve(null);
+  }
 }
 
 window.initMap = initMap;
