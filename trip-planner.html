@@ -39,7 +39,7 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
 .stops-list { flex: 1; overflow-y: auto; }
 
 /* ── Day cards ── */
-.day-card { border-bottom: 1px solid #e0dfd8; padding: 11px 14px; cursor: pointer; transition: background 0.1s; border-left: 3px solid transparent; position: relative; }
+.day-card { border-bottom: 1px solid #e0dfd8; padding: 11px 14px 11px 28px; cursor: pointer; transition: background 0.1s; border-left: 3px solid transparent; position: relative; }
 .day-card:hover { background: #f9f8f5; }
 .day-card.active { background: #f0f4ff; border-left-color: #2a6ebb; }
 .day-card.type-home { border-left-color: #534ab7; background: #faf9ff; }
@@ -47,6 +47,14 @@ header h1 { font-size: 16px; font-weight: 500; white-space: nowrap; }
 .day-card.type-dayvisit { border-left-color: #888780; }
 .day-card.type-destination { border-left-color: #0f6e56; background: #f4fdf9; }
 .day-card.type-custom { border-left-color: #d4537e; }
+.day-card.dragging { opacity: 0.4; }
+.day-card.drag-over-top { box-shadow: inset 0 2px 0 0 #2a6ebb; }
+.day-card.drag-over-bottom { box-shadow: inset 0 -2px 0 0 #2a6ebb; }
+.drag-handle { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); color: #ccc; cursor: grab; font-size: 14px; line-height: 1; padding: 4px 2px; user-select: none; }
+.drag-handle:hover { color: #888; }
+.drag-handle:active { cursor: grabbing; }
+.loading-stop { opacity: 0.55; }
+.loading-stop .day-note::after { content: " ⏳ fetching trip data…"; color: #888; }
 .day-label { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.04em; }
 .day-title { font-size: 13px; font-weight: 600; margin: 2px 0; color: #1a1a18; padding-right: 20px; }
 .day-sub { font-size: 11px; color: #777; }
@@ -407,7 +415,7 @@ const ROUTES = [
 //  APP STATE
 // ═══════════════════════════════════════════════════════════════
 
-const API_KEY = 'AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk';
+const API_KEY = 'AIzaSyAuHAiHyjvh2Tvm2qO_vZsH4SeSzauzwj4';
 
 let map, autocomplete, placesService, directionsService;
 let markers = {}, infoWindows = {};
@@ -419,6 +427,8 @@ let activeRouteId = 'B';
 let toggleStates = {};   // { toggleId: bool }
 let customStops = {};    // { routeId: [stopObj, ...] } — user-added stops
 let removedStops = {};   // { routeId: Set(stopId) }
+let stopOrder = {};      // { routeId: [stopId, stopId, ...] } — custom ordering
+let draggedStopId = null;
 
 // ═══════════════════════════════════════════════════════════════
 //  URL STATE
@@ -436,6 +446,9 @@ function encodeState() {
   if (Object.keys(customStops).some(k => customStops[k].length > 0)) {
     state.cs = customStops;
   }
+  if (Object.keys(stopOrder).some(k => stopOrder[k] && stopOrder[k].length > 0)) {
+    state.so = stopOrder;
+  }
   return btoa(JSON.stringify(state));
 }
 
@@ -450,6 +463,7 @@ function decodeState(hash) {
       }
     }
     if (state.cs) customStops = state.cs;
+    if (state.so) stopOrder = state.so;
   } catch(e) {}
 }
 
@@ -588,7 +602,20 @@ function getActiveStops() {
     return true;
   });
 
-  return [...base, ...custom];
+  let combined = [...base, ...custom];
+
+  // Apply saved custom order, if one exists for this route
+  const order = stopOrder[activeRouteId];
+  if (order && order.length) {
+    const byId = {};
+    combined.forEach(s => byId[s.id] = s);
+    const ordered = order.filter(id => byId[id]).map(id => byId[id]);
+    // Append any stops not yet in the saved order (newly toggled-on, etc.)
+    combined.forEach(s => { if (!order.includes(s.id)) ordered.push(s); });
+    combined = ordered;
+  }
+
+  return combined;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -730,13 +757,45 @@ function buildSidebar() {
   list.innerHTML = '';
 
   const stops = getActiveStops();
-  const removed = removedStops[activeRouteId] || new Set();
 
   stops.forEach(stop => {
     const card = document.createElement('div');
-    card.className = `day-card type-${stop.type}`;
+    card.className = `day-card type-${stop.type}` + (stop.loading ? ' loading-stop' : '');
     card.id = `card-${stop.id}`;
-    card.onclick = () => focusStop(stop);
+    card.draggable = true;
+    card.dataset.stopId = stop.id;
+    card.onclick = (e) => { if (!e.target.classList.contains('remove-btn') && !e.target.classList.contains('drag-handle')) focusStop(stop); };
+
+    // Drag-and-drop reordering
+    card.addEventListener('dragstart', (e) => {
+      draggedStopId = stop.id;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      document.querySelectorAll('.day-card').forEach(c => c.classList.remove('drag-over-top', 'drag-over-bottom'));
+    });
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!draggedStopId || draggedStopId === stop.id) return;
+      const rect = card.getBoundingClientRect();
+      const isTopHalf = (e.clientY - rect.top) < rect.height / 2;
+      card.classList.toggle('drag-over-top', isTopHalf);
+      card.classList.toggle('drag-over-bottom', !isTopHalf);
+    });
+    card.addEventListener('dragleave', () => {
+      card.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const isTopHalf = card.classList.contains('drag-over-top');
+      card.classList.remove('drag-over-top', 'drag-over-bottom');
+      if (draggedStopId && draggedStopId !== stop.id) {
+        reorderStop(draggedStopId, stop.id, isTopHalf);
+      }
+      draggedStopId = null;
+    });
 
     const hookupBadge = stop.hookups
       ? `<span class="badge ${hookupBadgeClass(stop.hookups)}">${stop.hookups}</span>`
@@ -745,20 +804,32 @@ function buildSidebar() {
     const tempHtml = stop.temp
       ? `<div class="temp">Aug avg: ${formatTemp(stop.temp)}</div>` : '';
 
-    const isRemovable = stop.type === 'custom' ||
-      (stop.type !== 'destination');
-
+    // Every stop can now be removed and reordered, including defaults
     card.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
       <div class="day-label">${stop.day ? `Day ${stop.day}${stop.date ? ' · ' + stop.date : ''}` : stop.type === 'optional' ? 'Optional stop' : stop.type === 'dayvisit' ? 'Day visit' : ''}</div>
       <div class="day-title">${stop.title}</div>
       <div class="day-sub">${stop.sub || ''}</div>
       <div class="day-meta">${hookupBadge}</div>
       ${tempHtml}
       ${stop.note ? `<div class="day-note">${stop.note}</div>` : ''}
-      ${isRemovable ? `<button class="remove-btn" onclick="removeStop(event,'${stop.id}')" title="Remove stop">×</button>` : ''}
+      <button class="remove-btn" onclick="removeStop(event,'${stop.id}')" title="Remove stop">×</button>
     `;
     list.appendChild(card);
   });
+}
+
+function reorderStop(draggedId, targetId, insertBefore) {
+  const stops = getActiveStops();
+  const ids = stops.map(s => s.id);
+  const fromIdx = ids.indexOf(draggedId);
+  if (fromIdx === -1) return;
+  ids.splice(fromIdx, 1);
+  let toIdx = ids.indexOf(targetId);
+  if (!insertBefore) toIdx += 1;
+  ids.splice(toIdx, 0, draggedId);
+  stopOrder[activeRouteId] = ids;
+  renderAll();
 }
 
 function hookupBadgeClass(hookups) {
@@ -813,12 +884,16 @@ function removeStop(e, stopId) {
   } else {
     customStops[activeRouteId] = (customStops[activeRouteId] || []).filter(s => s.id !== stopId);
   }
+  if (stopOrder[activeRouteId]) {
+    stopOrder[activeRouteId] = stopOrder[activeRouteId].filter(id => id !== stopId);
+  }
   renderAll();
 }
 
 function resetRoute() {
   removedStops[activeRouteId] = new Set();
   customStops[activeRouteId] = [];
+  stopOrder[activeRouteId] = [];
   const route = ROUTES.find(r => r.id === activeRouteId);
   route.toggles.forEach(t => {
     toggleStates[`${activeRouteId}_${t.id}`] = t.defaultOn;
@@ -853,8 +928,11 @@ function addCustomStop(name, lat, lng) {
   const stop = {
     id, type: 'custom', lat, lng,
     title: name,
-    sub: 'Custom waypoint — click × to remove',
-    note: 'Added manually. Drag marker or remove and re-add to reposition.'
+    sub: 'Calculating…',
+    hookups: '—',
+    temp: '—',
+    note: 'Added manually.',
+    loading: true
   };
   customStops[activeRouteId] = customStops[activeRouteId] || [];
   customStops[activeRouteId].push(stop);
@@ -863,6 +941,76 @@ function addCustomStop(name, lat, lng) {
   // Pan to new stop
   map.panTo({ lat, lng });
   map.setZoom(9);
+
+  // Populate real data in the background, same fields as built-in stops
+  populateStopData(stop);
+}
+
+function populateStopData(stop) {
+  const stops = getActiveStops();
+  const idx = stops.findIndex(s => s.id === stop.id);
+  const prevStop = idx > 0 ? stops[idx - 1] : null;
+
+  const tasks = [fetchAugustTemp(stop.lat, stop.lng)];
+  if (prevStop && prevStop.lat && prevStop.lng) {
+    tasks.push(fetchDriveInfo(prevStop, stop));
+  } else {
+    tasks.push(Promise.resolve(null));
+  }
+
+  Promise.all(tasks).then(([temp, driveInfo]) => {
+    if (temp) {
+      stop.temp = `${temp.high}°F / ${temp.low}°F`;
+    }
+    if (driveInfo) {
+      stop.sub = `${driveInfo.distance} · ${driveInfo.duration} from ${prevStop.title.split(',')[0].split('—')[0].trim()}`;
+    } else {
+      stop.sub = 'Custom waypoint';
+    }
+    stop.note = 'Added manually. Hookup and campground info not available automatically — edit notes once you research the site, or drag to reorder.';
+    stop.hookups = 'Unknown — verify locally';
+    stop.loading = false;
+    renderAll();
+  }).catch(() => {
+    stop.sub = 'Custom waypoint';
+    stop.note = 'Added manually. Could not auto-fetch trip data — check your connection.';
+    stop.hookups = 'Unknown';
+    stop.loading = false;
+    renderAll();
+  });
+}
+
+function fetchDriveInfo(fromStop, toStop) {
+  return new Promise((resolve) => {
+    directionsService.route({
+      origin: { lat: fromStop.lat, lng: fromStop.lng },
+      destination: { lat: toStop.lat, lng: toStop.lng },
+      travelMode: 'DRIVING'
+    }, (result, status) => {
+      if (status === 'OK' && result.routes[0]) {
+        const leg = result.routes[0].legs[0];
+        resolve({ distance: leg.distance.text, duration: leg.duration.text });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function fetchAugustTemp(lat, lng) {
+  // Open-Meteo climate normals API — free, no key required
+  const url = `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lng}&start_date=2010-08-01&end_date=2020-08-31&models=EC_Earth3P_HR&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit`;
+  return fetch(url)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.daily || !data.daily.temperature_2m_max) return null;
+      const highs = data.daily.temperature_2m_max.filter(v => v != null);
+      const lows = data.daily.temperature_2m_min.filter(v => v != null);
+      if (!highs.length || !lows.length) return null;
+      const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+      return { high: avg(highs), low: avg(lows) };
+    })
+    .catch(() => null);
 }
 
 window.initMap = initMap;
@@ -875,7 +1023,7 @@ window.copyShareUrl = copyShareUrl;
 </script>
 
 <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgvRvr-TmFXeQWpFExrviWr3YXgXwNruk&libraries=places&callback=initMap">
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuHAiHyjvh2Tvm2qO_vZsH4SeSzauzwj4&libraries=places&callback=initMap">
 </script>
 
 </body>
