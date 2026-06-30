@@ -481,7 +481,16 @@ function buildStateObject() {
 }
 
 function encodeState() {
-  return btoa(JSON.stringify(buildStateObject()));
+  return utf8ToBase64(JSON.stringify(buildStateObject()));
+}
+
+function utf8ToBase64(str) {
+  // btoa() only supports Latin1 — our notes contain °, ·, etc. Encode as UTF-8 bytes first.
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function base64ToUtf8(str) {
+  return decodeURIComponent(escape(atob(str)));
 }
 
 function applyState(state) {
@@ -500,8 +509,10 @@ function applyState(state) {
 
 function decodeState(hash) {
   try {
-    applyState(JSON.parse(atob(hash)));
-  } catch(e) {}
+    applyState(JSON.parse(base64ToUtf8(hash)));
+  } catch(e) {
+    console.error('[state] decodeState failed', e);
+  }
 }
 
 function saveToLocalStorage() {
@@ -537,10 +548,15 @@ function loadFromLocalStorage() {
 }
 
 function updateShareUrl() {
-  const encoded = encodeState();
-  const url = `${location.origin}${location.pathname}#${encoded}`;
-  const el = document.getElementById('share-url');
-  if (el) el.value = url;
+  try {
+    const encoded = encodeState();
+    const url = `${location.origin}${location.pathname}#${encoded}`;
+    const el = document.getElementById('share-url');
+    if (el) el.value = url;
+  } catch (err) {
+    console.error('[state] updateShareUrl failed — share link may be stale, but app continues', err);
+  }
+  // Always attempt the save, independent of whether the share URL succeeded
   saveToLocalStorage();
 }
 
