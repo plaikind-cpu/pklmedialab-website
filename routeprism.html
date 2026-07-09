@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoutePrism — AI-Powered Road Trip Planner</title>
+  <meta name="description" content="RoutePrism builds intelligent multi-day road trip itineraries using AI — personalized to your travel style, vehicle, and stops. Plan smarter. Drive better."/>
+  <link rel="icon" href="assets/rp-icon128.png" type="image/png"/>
+  <style>
+    :root {
+      --dark:#0D1525; --dark2:#111928; --border:#1e2d45;
+      --rp-blue:#3B82F6; --rp-deep:#1e3a6e; --rp-end:#60a5fa;
+      --rp-teal:#14b8a6; --rp-amber:#f59e0b;
+      --text:#e0e8f0; --muted:#6688aa; --white:#ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; }
+
+    /* ── PKL banner ── */
+    .pkl-banner {
+      background: #060d1a; border-bottom: 1px solid #1a2540;
+      padding: 7px 24px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .pkl-banner a { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .pkl-banner-name { font-size: 12px; font-weight: 700; color: #3B82F6; letter-spacing: 1.2px; text-transform: uppercase; }
+    .pkl-banner-by { font-size: 10px; color: #3a5070; font-style: italic; }
+    .pkl-banner-tag { font-size: 10px; color: #3a5070; }
+
+    /* ── Nav ── */
+    nav {
+      background: rgba(13,21,37,0.96); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; height: 56px;
+    }
+    .nav-logo { font-weight: 800; font-size: 15px; color: var(--white); text-decoration: none; margin-right: 28px; display: flex; align-items: center; gap: 8px; }
+    .nav-logo img { width: 24px; height: 24px; border-radius: 6px; object-fit: cover; }
+    .nav-links { display: flex; gap: 18px; flex: 1; }
+    .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--rp-blue); font-weight: 600; }
+    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .nav-right a { font-size: 12px; color: var(--muted); text-decoration: none; padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; transition: color 0.2s, border-color 0.2s; }
+    .nav-right a:hover { color: var(--text); border-color: #3a5070; }
+    .nav-right a.cta { background: linear-gradient(135deg, var(--rp-deep), var(--rp-blue)); color: white; border: none; font-weight: 600; }
+
+    /* ── Hero ── */
+    .hero { text-align: center; padding: 64px 24px 40px; max-width: 740px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block; background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.35); color: var(--rp-blue);
+      font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 20px;
+      margin-bottom: 20px; letter-spacing: 0.8px;
+    }
+    .hero h1 { font-size: clamp(28px, 5vw, 46px); font-weight: 800; color: var(--white); line-height: 1.18; margin-bottom: 16px; }
+    .hero h1 span { background: linear-gradient(135deg, #3B82F6, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { font-size: 16px; color: var(--muted); margin-bottom: 28px; line-height: 1.75; max-width: 580px; margin-left: auto; margin-right: auto; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: linear-gradient(135deg, var(--rp-deep), var(--rp-blue)); color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; transition: opacity 0.2s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-secondary { background: transparent; color: var(--rp-blue); padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; border: 1px solid rgba(59,130,246,0.4); display: inline-block; transition: background 0.2s; }
+    .btn-secondary:hover { background: rgba(59,130,246,0.08); }
+
+    /* ── Splash image ── */
+    .splash-wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 56px; }
+    .splash-wrap img { width: 100%; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.55); display: block; }
+
+    /* ── Trip type cards ── */
+    .profiles-row { display: flex; gap: 14px; justify-content: center; padding: 0 24px 56px; flex-wrap: wrap; max-width: 820px; margin: 0 auto; }
+    .profile-card { flex: 1; min-width: 200px; background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 22px; text-align: center; }
+    .profile-icon { font-size: 28px; margin-bottom: 10px; }
+    .profile-label { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+    .profile-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .profile-card.van { border-color: rgba(20,184,166,0.3); }
+    .profile-card.van .profile-label { color: #2dd4bf; }
+    .profile-card.car { border-color: rgba(59,130,246,0.3); }
+    .profile-card.car .profile-label { color: #60a5fa; }
+    .profile-card.custom { border-color: rgba(245,158,11,0.3); }
+    .profile-card.custom .profile-label { color: #fbbf24; }
+
+    /* ── Sections ── */
+    .section { max-width: 820px; margin: 0 auto; padding: 48px 24px; }
+    .section-title { font-size: 24px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+    .section-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; line-height: 1.7; }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step { display: flex; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--rp-deep), var(--rp-blue)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; flex-shrink: 0; margin-top: 2px; }
+    .step-body h3 { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .step-body p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+    .badge-blue { background: rgba(59,130,246,0.15); color: var(--rp-blue); }
+    .badge-teal { background: rgba(20,184,166,0.15); color: #2dd4bf; }
+    .badge-amber { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+    /* ── Features grid ── */
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .feature-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .feature-icon { font-size: 22px; margin-bottom: 10px; }
+    .feature-card h4 { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Info card ── */
+    .info-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+    .info-card h3 { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+    .info-card p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; }
+    .tip { background: rgba(59,130,246,0.08); border-left: 3px solid rgba(59,130,246,0.4); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 13px; color: var(--muted); margin: 12px 0; line-height: 1.65; }
+
+    /* ── Access section ── */
+    .access-card { background: var(--dark2); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 28px; }
+    .access-card h3 { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+    .access-card p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; }
+
+    /* ── Advisory ── */
+    .advisory { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px; padding: 16px 20px; font-size: 13px; color: #d4a843; line-height: 1.7; margin-top: 24px; }
+
+    /* ── CTA ── */
+    .cta-section { background: linear-gradient(135deg, #0f1f3a, #0D1525); border: 1px solid var(--border); border-radius: 16px; padding: 48px 32px; text-align: center; max-width: 820px; margin: 0 auto 48px; }
+    .cta-section h2 { font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 12px; }
+    .cta-section p { color: var(--muted); margin-bottom: 24px; font-size: 15px; line-height: 1.7; }
+    .btn-cta { display: inline-block; background: linear-gradient(135deg, var(--rp-deep), var(--rp-blue)); color: white; padding: 13px 32px; border-radius: 9px; text-decoration: none; font-weight: 700; font-size: 15px; margin: 4px; transition: opacity 0.2s; }
+    .btn-cta:hover { opacity: 0.88; }
+    .btn-email { display: inline-block; background: transparent; border: 1px solid rgba(59,130,246,0.4); color: var(--rp-blue); padding: 12px 28px; border-radius: 9px; text-decoration: none; font-weight: 600; font-size: 14px; margin: 4px; transition: background 0.2s; }
+    .btn-email:hover { background: rgba(59,130,246,0.08); }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid var(--border); padding: 32px 24px; text-align: center; font-size: 12px; color: var(--muted); }
+    .footer-nav { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-bottom: 20px; }
+    .footer-section strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 8px; }
+    .footer-section a { display: block; margin: 3px 0; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-section a:hover { color: var(--text); }
+    .site-disclaimer { margin-top: 20px; padding: 14px 18px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; font-size: 12px; line-height: 1.7; color: #a0a8b8; max-width: 780px; margin-left: auto; margin-right: auto; text-align: left; }
+
+    ol, ul { padding-left: 20px; color: var(--muted); font-size: 14px; }
+    li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- PKL Media Lab banner -->
+<div class="pkl-banner">
+  <a href="index.html">
+    <span class="pkl-banner-name">PKL Media Lab</span>
+    <span class="pkl-banner-by">by Paul Laikind, PhD</span>
+  </a>
+  <span class="pkl-banner-tag">AI-powered tools for smarter living</span>
+</div>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="assets/rp-icon128.png" alt="RoutePrism"/>RoutePrism
+  </a>
+  <div class="nav-links">
+    <a href="routeprism.html" class="active">RoutePrism</a>
+    <a href="medprism.html">MedPrism</a>
+    <a href="truthprism.html">TruthPrism</a>
+    <a href="nd-index.html">News-Distiller</a>
+  </div>
+  <div class="nav-right">
+    <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request" class="cta">Request Access →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">AI ROAD TRIP PLANNER · BY INVITATION</div>
+  <div style="font-size:13px;color:var(--rp-blue);margin-bottom:12px;text-align:center;">🔑 Access by request — email paul@pklmedialab.com</div>
+  <h1>Plan Your Road Trip<br/><span>Intelligently.</span></h1>
+  <p>RoutePrism builds personalized multi-day road trip itineraries using AI — accounting for your travel style, vehicle, daily drive limits, and the kinds of stops that matter to you. From origin to destination, every stop researched and sequenced.</p>
+  <div class="hero-btns">
+    <a href="https://routeprism.pklmedialab.com" target="_blank" class="btn-primary">Open RoutePrism →</a>
+    <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request" class="btn-secondary">Request Access</a>
+  </div>
+</div>
+
+<!-- Splash image -->
+<div class="splash-wrap">
+  <img src="assets/RoutePrism_Splash.png" alt="RoutePrism — Intelligent Trip Planning"/>
+</div>
+
+<!-- Travel profile cards -->
+<div class="profiles-row">
+  <div class="profile-card van">
+    <div class="profile-icon">🚐</div>
+    <div class="profile-label">Van / RV Camping</div>
+    <div class="profile-desc">Routes optimized for campgrounds, National and State Parks, hookup availability, and scenic drives. Built for the Sequence, Airstream, or any rig.</div>
+  </div>
+  <div class="profile-card car">
+    <div class="profile-icon">🚗</div>
+    <div class="profile-label">Car / Hotel Travel</div>
+    <div class="profile-desc">Routes with hotel stops, restaurant recommendations, and day-trip detours. Ideal for families and business travelers who want smart, flexible itineraries.</div>
+  </div>
+  <div class="profile-card custom">
+    <div class="profile-icon">⚙️</div>
+    <div class="profile-label">Custom Profile</div>
+    <div class="profile-desc">Fully configurable — lodging style, daily drive hours, pace preference, points of interest, must-hit waypoints, and more. RoutePrism learns your preferences.</div>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="section">
+  <div class="section-title">How RoutePrism Works</div>
+  <div class="section-sub">A multi-pass AI pipeline that turns your origin, destination, and preferences into a structured day-by-day itinerary.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Set Your Route &amp; Profile <span class="badge badge-blue">You</span></h3>
+        <p>Enter your origin, destination, and travel dates. Choose or customize a travel profile — van camping, car and hotel, or fully custom. Set daily drive limits, lodging preferences, and any must-hit waypoints.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>AI Plans Your Waypoints <span class="badge badge-blue">Claude AI</span></h3>
+        <p>Claude AI researches your corridor and builds a logical sequence of overnight stops and day visits — spacing drive times to match your pace, flagging National Parks, scenic routes, and points of interest along the way.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Each Stop is Researched <span class="badge badge-teal">Brave Search</span></h3>
+        <p>Every waypoint is researched in real time — campground names and amenities, hotel options, must-see attractions, dining, and local tips. The result is a stop-by-stop briefing, not just a list of city names.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Refine &amp; Save <span class="badge badge-amber">Interactive Map</span></h3>
+        <p>Review your itinerary on an interactive Google Map. Add, remove, or reorder stops. Use Suggest Stops to fill gaps, or Ask AI for midpoint suggestions. Save multiple routes and load them across devices.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- What you get -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">What You Get</div>
+  <div class="section-sub">A full trip-planning workspace — not just a list of stops, but a structured itinerary you can actually drive.</div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🗺️</div>
+      <h4>Interactive Route Map</h4>
+      <p>Google Maps integration with lettered markers for every stop, live driving directions, and a right-side sidebar with per-stop details and drive times.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h4>Day-by-Day Itinerary</h4>
+      <p>Each day shows overnight stop, day visits, drive time from the prior stop, and AI-researched briefing notes on what to do and where to stay.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💡</div>
+      <h4>Suggest Stops Panel</h4>
+      <p>Ask RoutePrism to suggest additional stops along your corridor — filtered by type (parks, cities, attractions). Save multiple suggestion lists and swap them in.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📏</div>
+      <h4>Distance Calculator</h4>
+      <p>Instantly sum the driving miles along your route between any two stops — skipping day visits to give you actual road distance, not straight-line estimates.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h4>Ask AI Anywhere</h4>
+      <p>Ask open-ended questions mid-trip: "What's a good midpoint between here and Denver?" or "Recommend a scenic detour through Colorado." AI responds in context.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💾</div>
+      <h4>Save &amp; Sync Routes</h4>
+      <p>Routes are saved server-side — load them on any device, pick up where you left off, and keep multiple trip variations in parallel.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Web app -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">🌐 RoutePrism Web App</div>
+  <div class="section-sub">A full-featured web app accessible from any desktop browser — optimized for planning on a big screen before you drive.</div>
+  <div class="info-card" style="border-color:rgba(59,130,246,0.3);">
+    <h3>routeprism.pklmedialab.com</h3>
+    <p>The RoutePrism web app runs on any desktop or laptop browser. Enter your route, configure your profile, and let AI build your itinerary — then explore, refine, and save it. Best used on a desktop or laptop for the full map + sidebar layout.</p>
+    <div class="tip">💡 RoutePrism works best on desktop where the full map and sidebar layout is visible. On iPhone or iPad, the interface adapts to portrait and landscape — though desktop is recommended for initial trip planning.</div>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px;">An access code is required. Codes are available free of charge — email to request one. Because each route build incurs AI processing costs, codes are distributed on a limited basis.</p>
+    <a href="https://routeprism.pklmedialab.com" target="_blank" style="display:inline-block;margin-top:16px;padding:10px 20px;background:linear-gradient(135deg,var(--rp-deep),var(--rp-blue));color:#fff;text-decoration:none;font-weight:700;font-size:0.88rem;border-radius:8px;">Open RoutePrism Web App →</a>
+  </div>
+</div>
+
+<!-- Access / Request -->
+<div class="section" style="padding-top:0;">
+  <div class="section-title">🔑 Requesting Access</div>
+  <div class="section-sub">RoutePrism is available by invitation. Access is free of charge — just email to request a code.</div>
+  <div class="access-card">
+    <h3>How to get an access code</h3>
+    <p>Email <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request" style="color:var(--rp-blue);font-weight:600;">paul@pklmedialab.com</a> with the subject line "RoutePrism Access Code Request." Mention your intended use (personal road trips, family travel, RV/van, etc.) and Paul will reply with a code.</p>
+    <p>Access codes are free of charge. Because each route build incurs AI processing costs (Claude AI + Brave Search for real-time research), codes are distributed on a limited basis at Paul's discretion.</p>
+    <div class="tip">💡 Once you have a code, enter it in the RoutePrism web app and click Save. Your code is remembered on your device and each route build draws from your code balance.</div>
+    <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request" style="display:inline-block;margin-top:8px;padding:10px 20px;background:linear-gradient(135deg,var(--rp-deep),var(--rp-blue));color:#fff;text-decoration:none;font-weight:700;font-size:0.88rem;border-radius:8px;">📧 Request Access Code</a>
+  </div>
+</div>
+
+<!-- Advisory -->
+<div class="section" style="padding-top:0;">
+  <div class="advisory">
+    ⚠️ <strong>Advisory use only.</strong> RoutePrism generates AI-assisted route suggestions and stop recommendations for planning purposes. Suggested stops, campgrounds, hotels, hours, and driving times should be independently verified before travel. Road conditions, closures, availability, and reservation requirements change frequently. RoutePrism is powered by Claude AI (Anthropic) and Brave Search. AI can and does make mistakes. PKL Media Lab and Paul Laikind, PhD disclaim all liability for decisions made based on RoutePrism outputs.
+  </div>
+</div>
+
+<!-- CTA -->
+<div style="padding:0 24px 48px;">
+  <div class="cta-section">
+    <h2>Ready to Plan Your Next Trip?</h2>
+    <p>RoutePrism is available by invitation. Access is free of charge — email Paul to request a code, then open the web app and start building your route.</p>
+    <a href="https://routeprism.pklmedialab.com" target="_blank" class="btn-cta">Open Web App →</a>
+    <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request" class="btn-email">📧 Request Access Code</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-nav">
+    <div class="footer-section">
+      <strong>RoutePrism</strong>
+      <a href="https://routeprism.pklmedialab.com" target="_blank">Web App</a>
+      <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request">Request Access</a>
+    </div>
+    <div class="footer-section">
+      <strong>Other Apps</strong>
+      <a href="medprism.html">MedPrism</a>
+      <a href="truthprism.html">TruthPrism</a>
+      <a href="nd-index.html">News-Distiller</a>
+    </div>
+    <div class="footer-section">
+      <strong>PKL Media Lab</strong>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <div class="footer-section">
+      <strong>Contact</strong>
+      <a href="mailto:paul@pklmedialab.com">paul@pklmedialab.com</a>
+      <a href="https://pklmedialab.com">pklmedialab.com</a>
+    </div>
+  </div>
+  <p>© 2026 Paul Laikind, PhD · PKL Media Lab · Powered by Claude AI &amp; Brave Search</p>
+  <div class="site-disclaimer">
+    <strong style="color:#fbbf24;">Informational only.</strong> RoutePrism uses AI to generate trip planning suggestions. Output may be incomplete or incorrect. Always verify important information — campground availability, hotel bookings, road conditions — independently before relying on it.
+  </div>
+</footer>
+
+</body>
+</html>

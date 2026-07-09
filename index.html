@@ -17,6 +17,8 @@
       --nd-end: #38ef7d;
       --mp-primary: #1B5E8A;
       --mp-end: #38BDF8;
+      --rp-primary: #1e3a6e;
+      --rp-end: #3B82F6;
       --bg: #0f0f1a;
       --bg2: #13131f;
       --card: rgba(255,255,255,0.04);
@@ -82,6 +84,7 @@
       max-width: 1060px; margin: 0 auto;
       display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
     }
+    @media (min-width: 1100px) { .apps-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 760px) { .apps-grid { grid-template-columns: 1fr; } }
 
     .app-card {
@@ -126,10 +129,12 @@
     .badge-tp { background: rgba(102,126,234,0.12); border: 1px solid rgba(102,126,234,0.3); color: #a8b8ff; }
     .badge-nd { background: rgba(17,153,142,0.12); border: 1px solid rgba(17,153,142,0.3); color: #38ef7d; }
     .badge-mp { background: rgba(27,94,138,0.18); border: 1px solid rgba(56,189,248,0.3); color: #38BDF8; }
+    .badge-rp { background: rgba(30,58,110,0.22); border: 1px solid rgba(59,130,246,0.35); color: #60a5fa; }
     .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
     .badge-dot-tp { background: #667eea; }
     .badge-dot-nd { background: #38ef7d; }
     .badge-dot-mp { background: #38BDF8; }
+    .badge-dot-rp { background: #3B82F6; }
 
     .app-card-body h2 { font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
     .app-card-body p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.75; flex: 1; }
@@ -140,6 +145,7 @@
     .feat-tp li::before { color: #667eea; }
     .feat-nd li::before { color: #38ef7d; }
     .feat-mp li::before { color: #38BDF8; }
+    .feat-rp li::before { color: #60a5fa; }
 
     .app-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     .btn-tp {
@@ -163,6 +169,13 @@
       border-radius: 9px; transition: opacity 0.2s;
     }
     .btn-mp:hover { opacity: 0.88; }
+    .btn-rp {
+      display: inline-block; padding: 11px 22px;
+      background: linear-gradient(135deg, var(--rp-primary), var(--rp-end));
+      color: #fff; text-decoration: none; font-weight: 700; font-size: 0.88rem;
+      border-radius: 9px; transition: opacity 0.2s;
+    }
+    .btn-rp:hover { opacity: 0.88; }
     .btn-outline {
       display: inline-block; padding: 11px 20px;
       background: transparent; border: 1px solid var(--card-border);
@@ -382,6 +395,7 @@
       <span></span><span></span><span></span>
     </button>
     <ul class="nav-links">
+      <li><a href="routeprism.html">RoutePrism</a></li>
       <li><a href="medprism.html">MedPrism</a></li>
       <li><a href="truthprism.html">TruthPrism About</a></li>
       <li><a href="get-started.html">TruthPrism Get Started</a></li>
@@ -424,6 +438,32 @@
 <!-- APP CARDS -->
 <section class="apps-section">
   <div class="apps-grid">
+
+    <!-- RoutePrism -->
+    <div class="app-card">
+      <a class="app-card-splash" href="routeprism.html">
+        <img src="assets/RoutePrism_Splash.png" alt="RoutePrism — Intelligent Trip Planning" style="max-height:260px;width:100%;object-fit:cover;object-position:top;display:block;"/>
+        <div class="splash-overlay"></div>
+        <span class="splash-launch">Explore →</span>
+      </a>
+      <div class="app-card-body">
+        <div class="app-badge badge-rp"><span class="badge-dot badge-dot-rp"></span>AI Road Trip Planner</div>
+        <div style="display:inline-block;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;">🔑 By Invitation · Code on Request</div>
+        <h2>RoutePrism</h2>
+        <p>Build personalized multi-day road trip itineraries using AI — optimized for your travel style, vehicle, daily drive limits, and the stops that matter to you. From origin to destination, every stop researched and sequenced.</p>
+        <ul class="app-features feat-rp">
+          <li>AI builds your full day-by-day route in seconds</li>
+          <li>Van / RV Camping or Car / Hotel travel profiles</li>
+          <li>Suggest Stops panel — fill gaps along your corridor</li>
+          <li>Distance Calculator — sum driving miles between stops</li>
+          <li>Save routes server-side and sync across devices</li>
+        </ul>
+        <div class="app-actions">
+          <a href="routeprism.html" class="btn-rp">Learn More →</a>
+          <a href="https://routeprism.pklmedialab.com" target="_blank" class="btn-outline">Open App</a>
+        </div>
+      </div>
+    </div>
 
     <!-- MedPrism -->
     <div class="app-card">
@@ -675,6 +715,12 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-col-group">
+      <div class="footer-col">
+        <h4>RoutePrism</h4>
+        <a href="routeprism.html">Home</a>
+        <a href="https://routeprism.pklmedialab.com" target="_blank">Open App</a>
+        <a href="mailto:paul@pklmedialab.com?subject=RoutePrism%20Access%20Code%20Request">Request Access</a>
+      </div>
       <div class="footer-col">
         <h4>TruthPrism</h4>
         <a href="truthprism.html">Home</a>
